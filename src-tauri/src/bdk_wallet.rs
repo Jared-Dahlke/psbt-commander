@@ -4,40 +4,70 @@ use bdk::database::MemoryDatabase;
 use bdk::blockchain::ElectrumBlockchain;
 use bdk::electrum_client::Client;
 use bdk::keys::{DerivableKey, GeneratableKey, GeneratedKey, ExtendedKey, bip39::{Mnemonic, WordCount, Language}};
-
 use bdk::template::Bip84;
-//use bdk::keys::bip39::{Mnemonic, Language};
+
+use serde::Serialize;
+
+
+#[derive(Serialize)]
+pub struct WalletInfo {
+    confirmed_balance: u64,
+    new_address: String,
+    utxos: Vec<UtxoInfo>,
+}
+
+#[derive(Serialize)]
+pub struct UtxoInfo {
+    txid: String,
+    value: u64,
+}
+
+
+
 pub struct BdkWallet {
    
 }
 
 impl BdkWallet {
-    pub fn create_wallet_bdk() -> Result<(), bdk::Error> {
+    pub fn get_info_by_descriptor(
+        descriptor: &str,
+    ) -> Result<WalletInfo, bdk::Error> {
         // let client = Client::new("ssl://electrum.blockstream.info:60002")?;
         let client = Client::new("tcp://localhost:50000")?;
         let blockchain = ElectrumBlockchain::from(client);
         let wallet = Wallet::new(
-            "wpkh([3f519d7d/84'/1'/0']tpubDCtvJVccjoDD4Ef4Z1tAsgjX4NA969N5sczc8dwwcVHGmTDhHqUXtA6zQFWHHY9bZDvfWS1X4PkSBv22yzAjPbsUUKJqs5QTCniQkKvxh2h/0/*)#s625str5",
-            Some("wpkh([3f519d7d/84'/1'/0']tpubDCtvJVccjoDD4Ef4Z1tAsgjX4NA969N5sczc8dwwcVHGmTDhHqUXtA6zQFWHHY9bZDvfWS1X4PkSBv22yzAjPbsUUKJqs5QTCniQkKvxh2h/1/*)#pw04d7nv"),
+            descriptor,
+           None,
             bdk::bitcoin::Network::Regtest,         
             MemoryDatabase::default(),
         )?;
     
         wallet.sync(&blockchain, SyncOptions::default())?;
 
-        let info = wallet.get_address(AddressIndex::New)?;
-        
+        let address_info = wallet.get_address(AddressIndex::New)?;
+        let new_address = address_info.to_string();
+
         // print info
-        println!("Address: {}", info);
+       // println!("A new address: {}", info);
 
         let balance = wallet.get_balance()?;
-        println!("Balance: {}", balance);
+        //println!("Balance: {}", balance);
+        let confirmed_balance = balance.confirmed;
+
+
+        let utxos = wallet.list_unspent()?;
+        let utxos_with_txid_and_value = utxos.iter().map(|utxo| UtxoInfo {
+            txid: utxo.outpoint.txid.to_string(),
+            value: utxo.txout.value,
+        }).collect();
     
-    
-        Ok(())
+        Ok(WalletInfo {
+            confirmed_balance,
+            new_address,
+            utxos: utxos_with_txid_and_value,
+        })
         
     }
-
 
 
     pub fn create_descriptor() -> Result<(), bdk::Error> {

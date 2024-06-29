@@ -1,25 +1,28 @@
 import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import { invoke } from '@tauri-apps/api/tauri'
-import './App.css'
+import { Testing } from './components/Testing'
+//import './App.css'
 
 function App() {
-	async function createWallet() {
-		// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-		const res = await invoke('create_wallet')
+	const [descriptor, setDescriptor] = useState(
+		`wpkh([3f519d7d/84'/1'/0']tpubDCtvJVccjoDD4Ef4Z1tAsgjX4NA969N5sczc8dwwcVHGmTDhHqUXtA6zQFWHHY9bZDvfWS1X4PkSBv22yzAjPbsUUKJqs5QTCniQkKvxh2h/0/*)#s625str5`
+	)
+	const [info, setInfo] = useState({})
+	async function get_info_by_descriptor() {
+		const res = (await invoke('get_info_by_descriptor', {
+			descriptor
+		})) as unknown as any[]
 		console.log('res', res)
-	}
-	async function createDesc() {
-		// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-		const res = await invoke('create_desc')
-		console.log('res', res)
+
+		setInfo(res)
 	}
 
 	return (
 		<div className='container'>
-			<h1>Welcome to Tauri!</h1>
+			{/* <h1>Welcome to Tauri!</h1> */}
 
-			<div className='row'>
+			{/* <div className='row'>
 				<a href='https://vitejs.dev' target='_blank'>
 					<img src='/vite.svg' className='logo vite' alt='Vite logo' />
 				</a>
@@ -29,37 +32,30 @@ function App() {
 				<a href='https://reactjs.org' target='_blank'>
 					<img src={reactLogo} className='logo react' alt='React logo' />
 				</a>
-			</div>
+			</div> */}
 
-			<p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
+			{/* <p>Click on the Tauri, Vite, and React logos to learn more.</p> */}
+			<Testing />
 			<form
 				className='row'
 				onSubmit={(e) => {
 					e.preventDefault()
-					createWallet()
+					get_info_by_descriptor()
 				}}>
-				{/* <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        /> */}
-				<button type='submit'>Create New Wallet</button>
+				<input
+					id='greet-input'
+					onChange={(e) => setDescriptor(e.currentTarget.value)}
+					value={descriptor}
+					placeholder='Please enter descriptor...'
+				/>
+				<button type='submit'>Get info</button>
 			</form>
 
-			<form
-				className='row'
-				onSubmit={(e) => {
-					e.preventDefault()
-					createDesc()
-				}}>
-				{/* <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        /> */}
-				<button type='submit'>Create desc</button>
-			</form>
+			<p className='text-red-300 font-bold'>
+				Balance: {info.confirmed_balance}
+			</p>
+			<p>New Address: {info.new_address}</p>
+			<p>Utxos: {JSON.stringify(info.utxos)}</p>
 
 			{/* <p>{greetMsg}</p> */}
 		</div>
