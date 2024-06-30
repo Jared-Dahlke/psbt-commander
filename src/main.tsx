@@ -11,6 +11,9 @@ import {
 import { Dashboard } from './components/custom/Dashboard'
 import { App } from './App'
 import { Send } from './components/custom/Send'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+const queryClient = new QueryClient()
 
 const router = createMemoryRouter([
 	{
@@ -32,7 +35,9 @@ const router = createMemoryRouter([
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
 	<React.StrictMode>
 		<TooltipProvider>
-			<RouterProvider router={router} />
+			<QueryClientProvider client={queryClient}>
+				<RouterProvider router={router} />
+			</QueryClientProvider>
 		</TooltipProvider>
 	</React.StrictMode>
 )

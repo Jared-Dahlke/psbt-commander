@@ -23,6 +23,11 @@ import {
 import { invoke } from '@tauri-apps/api/tauri'
 import { useState } from 'react'
 import { Textarea } from '../ui/textarea'
+import { UtxoTable } from '../utxo-table/utxo-table'
+import { useDescriptors } from '@/hooks/useLocalStorage'
+import { useWalletInfo } from '@/hooks/useWalletInfo'
+import { DataTable } from '../utxo-table/components/data-table'
+import { columns } from '../utxo-table/components/columns'
 
 const formSchema = z.object({
 	toAddress: z.string(),
@@ -35,6 +40,13 @@ export const Send = () => {
 		resolver: zodResolver(formSchema)
 	})
 
+	const { changeDescriptor, setChangeDescriptor, descriptor, setDescriptor } =
+		useDescriptors()
+
+	const walletInfoQuery = useWalletInfo({ descriptor, changeDescriptor })
+	console.log('walletInfoQuery', walletInfoQuery)
+	const { data: info } = walletInfoQuery
+
 	// 2. Define a submit handler.
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		// Do something with the form values.
@@ -42,7 +54,8 @@ export const Send = () => {
 		console.log(values)
 
 		const input = {
-			descriptor: `wpkh([3f519d7d/84'/1'/0']tpubDCtvJVccjoDD4Ef4Z1tAsgjX4NA969N5sczc8dwwcVHGmTDhHqUXtA6zQFWHHY9bZDvfWS1X4PkSBv22yzAjPbsUUKJqs5QTCniQkKvxh2h/0/*)#s625str5`,
+			descriptor,
+			change_descriptor: changeDescriptor,
 			amount: Number(values.amount),
 			recipient: values.toAddress
 		}
@@ -54,6 +67,7 @@ export const Send = () => {
 
 	return (
 		<div>
+			{info && JSON.stringify(info)}
 			<Card className='sm:col-span-2' x-chunk='dashboard-05-chunk-0'>
 				<CardHeader className='pb-3'>
 					<CardTitle>Create PSBT</CardTitle>
@@ -104,6 +118,8 @@ export const Send = () => {
 									</FormItem>
 								)}
 							/>
+
+							<DataTable data={info?.utxos || []} columns={columns} />
 						</CardContent>
 						<CardFooter className='flex flex-col gap-5 items-start'>
 							<Button type='submit'>Submit</Button>

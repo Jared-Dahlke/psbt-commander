@@ -12,8 +12,8 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-fn get_info_by_descriptor(descriptor: &str) -> Result<WalletInfo, String> {
-    match bdk_wallet::BdkWallet::get_info_by_descriptor(descriptor) {
+fn get_info_by_descriptor(descriptor: &str, change_descriptor: Option<&str>) -> Result<WalletInfo, String> {
+    match bdk_wallet::BdkWallet::get_info_by_descriptor(descriptor, change_descriptor) {
         Ok(wallet_info) => {
             println!("Wallet get_info_by_descriptor success");
             Ok(wallet_info)
@@ -26,10 +26,11 @@ fn get_info_by_descriptor(descriptor: &str) -> Result<WalletInfo, String> {
 }
 
 #[tauri::command]
-fn create_psbt(descriptor: &str, amount: u64, recipient: &str) -> Result<String, String> {
+fn create_psbt(descriptor: &str, change_descriptor: Option<&str>, amount: u64, recipient: &str) -> Result<String, String> {
 
     let input = CreatePsbtInput {
         descriptor,
+        change_descriptor,
         amount,  // Amount in satoshis
         recipient
     };
@@ -55,6 +56,9 @@ fn create_desc() {
     }
 
 }
+
+
+
 
 fn main() {
     tauri::Builder::default()

@@ -73,20 +73,16 @@ import {
 import { useState } from 'react'
 import { invoke } from '@tauri-apps/api/tauri'
 import SatoshiIcon from '/satoshi.svg'
+import { useWalletInfo } from '@/hooks/useWalletInfo'
+import { useDescriptors } from '@/hooks/useLocalStorage'
 
 export function Dashboard() {
-	const [descriptor, setDescriptor] = useState(
-		`wpkh([3f519d7d/84'/1'/0']tpubDCtvJVccjoDD4Ef4Z1tAsgjX4NA969N5sczc8dwwcVHGmTDhHqUXtA6zQFWHHY9bZDvfWS1X4PkSBv22yzAjPbsUUKJqs5QTCniQkKvxh2h/0/*)#s625str5`
-	)
-	const [info, setInfo] = useState({})
-	async function get_info_by_descriptor() {
-		const res = (await invoke('get_info_by_descriptor', {
-			descriptor
-		})) as unknown as any[]
-		console.log('res', res)
+	const { changeDescriptor, setChangeDescriptor, descriptor, setDescriptor } =
+		useDescriptors()
 
-		setInfo(res)
-	}
+	const walletInfoQuery = useWalletInfo({ descriptor, changeDescriptor })
+	console.log('walletInfoQuery', walletInfoQuery)
+	const { data: info } = walletInfoQuery
 
 	return (
 		<>
@@ -105,6 +101,12 @@ export function Dashboard() {
 						placeholder='Please enter descriptor...'
 						className='w-full'
 					/>
+					<Input
+						onChange={(e) => setChangeDescriptor(e.currentTarget.value)}
+						value={changeDescriptor}
+						placeholder='Please enter change descriptor...'
+						className='w-full'
+					/>
 
 					{/* <p className='text-red-300 font-bold'>
 								Balance: {info.confirmed_balance}
@@ -112,9 +114,9 @@ export function Dashboard() {
 							<p>New Address: {info.new_address}</p>
 							<p>Utxos: {JSON.stringify(info.utxos)}</p> */}
 				</CardContent>
-				<CardFooter>
+				{/* <CardFooter>
 					<Button onClick={get_info_by_descriptor}>Get Wallet Info</Button>
-				</CardFooter>
+				</CardFooter> */}
 			</Card>
 			<div className='grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2'>
 				<div className='grid gap-4 sm:grid-cols-2'>
@@ -141,7 +143,7 @@ export function Dashboard() {
 							{/* <Bitcoin className='h-4 w-4 text-muted-foreground' /> */}
 						</CardHeader>
 						<CardContent>
-							<div className=' font-bold'>{info.new_address}</div>
+							<div className=' font-bold'>{info?.new_address}</div>
 							{/* <p className='text-xs text-muted-foreground'>Satoshis</p> */}
 						</CardContent>
 					</Card>
@@ -235,7 +237,7 @@ export function Dashboard() {
 										</TableRow>
 									</TableHeader>
 									<TableBody>
-										{info.utxos?.map((utxo) => (
+										{info?.utxos?.map((utxo) => (
 											<TableRow className='bg-accent'>
 												<TableCell>
 													<div className='font-medium'>{utxo.txid}</div>

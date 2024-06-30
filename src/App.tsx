@@ -39,9 +39,7 @@ import path from 'path'
 
 export function App() {
 	const pathname = useLocation().pathname
-	console.log('pathname', pathname)
 	const isSend = pathname.includes('send')
-	console.log('isSend', isSend)
 
 	const getClasses = (path: string) => {
 		const isActive = pathname === path
