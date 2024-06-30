@@ -1,5 +1,9 @@
+use std::str::FromStr;
+
+use bdk::bitcoin::consensus::serialize;
+use bdk::wallet::coin_selection::DefaultCoinSelectionAlgorithm;
 use bdk::wallet::AddressIndex;
-use bdk::{Wallet, SyncOptions, miniscript, KeychainKind};
+use bdk::{miniscript, KeychainKind, SignOptions, SyncOptions, Wallet};
 use bdk::database::MemoryDatabase;
 use bdk::blockchain::ElectrumBlockchain;
 use bdk::electrum_client::Client;
@@ -7,6 +11,8 @@ use bdk::keys::{DerivableKey, GeneratableKey, GeneratedKey, ExtendedKey, bip39::
 use bdk::template::Bip84;
 
 use serde::Serialize;
+
+
 
 
 #[derive(Serialize)]
@@ -23,15 +29,26 @@ pub struct UtxoInfo {
 }
 
 
+#[derive(Serialize)]
+pub struct CreatePsbtInput<'a> {
+    pub descriptor: &'a str,
+    pub amount: u64,
+    pub recipient: &'a str
+}
+
+
+
+
 
 pub struct BdkWallet {
    
 }
 
 impl BdkWallet {
-    pub fn get_info_by_descriptor(
-        descriptor: &str,
-    ) -> Result<WalletInfo, bdk::Error> {
+    
+    fn create_wallet(
+        descriptor: &str
+    ) -> Result<Wallet<MemoryDatabase>, bdk::Error>{
         // let client = Client::new("ssl://electrum.blockstream.info:60002")?;
         let client = Client::new("tcp://localhost:50000")?;
         let blockchain = ElectrumBlockchain::from(client);
@@ -43,17 +60,21 @@ impl BdkWallet {
         )?;
     
         wallet.sync(&blockchain, SyncOptions::default())?;
+    
+        Ok(wallet)
+    }
 
+    pub fn get_info_by_descriptor(
+        descriptor: &str,
+    ) -> Result<WalletInfo, bdk::Error> {
+        
+        let wallet = BdkWallet::create_wallet(descriptor)?;
         let address_info = wallet.get_address(AddressIndex::New)?;
         let new_address = address_info.to_string();
 
-        // print info
-       // println!("A new address: {}", info);
-
         let balance = wallet.get_balance()?;
-        //println!("Balance: {}", balance);
-        let confirmed_balance = balance.confirmed;
 
+        let confirmed_balance = balance.confirmed;
 
         let utxos = wallet.list_unspent()?;
         let utxos_with_txid_and_value = utxos.iter().map(|utxo| UtxoInfo {
@@ -66,7 +87,50 @@ impl BdkWallet {
             new_address,
             utxos: utxos_with_txid_and_value,
         })
+    }
+
+    pub fn create_psbt(
+        CreatePsbtInput { descriptor, amount, recipient }: CreatePsbtInput
+    ) -> Result<String, bdk::Error> {
+        let wallet = BdkWallet::create_wallet(descriptor)?;
         
+        let dest_script = bdk::bitcoin::Address::from_str(recipient); // .script_pubkey();
+        let dest_script = match dest_script {
+            Ok(script) => script.script_pubkey(),
+            Err(_) => return Err(bdk::Error::Generic("Invalid address".to_string())),
+        };
+
+        let mut tx_builder = wallet.build_tx().coin_selection(DefaultCoinSelectionAlgorithm::default());
+
+        //  // The Coldcard requires an output redeem witness script
+        tx_builder.include_output_redeem_witness_script();
+
+        // // Enable signaling replace-by-fee
+        tx_builder.enable_rbf();
+
+        // // Add our script and the amount in sats to send
+        tx_builder.add_recipient(dest_script, amount);
+
+        // "Finish" the builder which returns a tuple:
+        // A `PartiallySignedTransaction` which serializes as a psbt
+        // And `TransactionDetails` which has helpful info about the transaction we just built
+         let (mut psbt, details) = tx_builder.finish()?;
+
+         // temporary, going to go ahead and sign and broadcast here:
+       // let signed = wallet.sign(&mut psbt, SignOptions::default())?;
+       // let tx = psbt.extract_tx();
+
+        // Broadcast the transaction using our chosen backend, returning a `Txid` or an error
+       // let txid = wallet.broadcast(tx)?;
+  
+       // println!("{:#?}", txid);
+         /////
+
+         let serialized_psbt = base64::encode(&serialize(&psbt));
+         println!("{:#?}", details);
+         println!("{}", serialized_psbt);
+
+        Ok(serialized_psbt)
     }
 
 

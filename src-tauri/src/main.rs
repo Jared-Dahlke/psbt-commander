@@ -2,6 +2,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod bdk_wallet;
+use bdk_wallet::CreatePsbtInput;
+
 use crate::bdk_wallet::WalletInfo;
 
 #[tauri::command]
@@ -24,6 +26,26 @@ fn get_info_by_descriptor(descriptor: &str) -> Result<WalletInfo, String> {
 }
 
 #[tauri::command]
+fn create_psbt(descriptor: &str, amount: u64, recipient: &str) -> Result<String, String> {
+
+    let input = CreatePsbtInput {
+        descriptor,
+        amount,  // Amount in satoshis
+        recipient
+    };
+    match bdk_wallet::BdkWallet::create_psbt(input) {
+        Ok(psbt) => {
+            println!("Wallet create_psbt success");
+            Ok(psbt)
+        },
+        Err(e) => {
+            eprintln!("Error create_psbt: {}", e);
+            Err(e.to_string())
+        },
+    }
+}
+
+#[tauri::command]
 fn create_desc() {
     
    
@@ -36,7 +58,7 @@ fn create_desc() {
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![greet, get_info_by_descriptor, create_desc])
+        .invoke_handler(tauri::generate_handler![greet, get_info_by_descriptor, create_desc, create_psbt])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

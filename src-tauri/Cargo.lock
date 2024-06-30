@@ -203,6 +203,7 @@ dependencies = [
 name = "bitcoin-wallet"
 version = "0.0.0"
 dependencies = [
+ "base64 0.22.1",
  "bdk",
  "serde",
  "serde_json",

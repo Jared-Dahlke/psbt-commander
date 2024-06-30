@@ -848,6 +848,10 @@ body {
   min-height: 100vh;
 }
 
+.min-h-\[80px\] {
+  min-height: 80px;
+}
+
 .w-10 {
   width: 2.5rem;
 }
@@ -1016,6 +1020,10 @@ body {
 
 .gap-6 {
   gap: 1.5rem;
+}
+
+.gap-5 {
+  gap: 1.25rem;
 }
 
 .space-y-1 > :not([hidden]) ~ :not([hidden]) {

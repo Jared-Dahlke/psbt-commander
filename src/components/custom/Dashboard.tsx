@@ -253,6 +253,7 @@ export function Dashboard() {
 					</TabsContent>
 				</Tabs>
 			</div>
+			<Button onClick={() => invoke('create_desc')}>Create new wallet</Button>
 		</>
 	)
 }
