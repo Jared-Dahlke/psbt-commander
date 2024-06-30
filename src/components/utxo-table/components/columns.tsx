@@ -9,9 +9,9 @@ import { labels, priorities, statuses } from '../data/data'
 import { Task } from '../data/schema'
 import { DataTableColumnHeader } from './data-table-column-header'
 import { DataTableRowActions } from './data-table-row-actions'
-import { WalletInfo } from '../../../hooks/useWalletInfo'
+import { Utxo, WalletInfo } from '../../../hooks/useWalletInfo'
 import numeral from 'numeral'
-export const columns: ColumnDef<WalletInfo['utxos']>[] = [
+export const columns: ColumnDef<Utxo>[] = [
 	{
 		id: 'select',
 		header: ({ table }) => (

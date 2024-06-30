@@ -31,13 +31,22 @@ import { DataTableToolbar } from './data-table-toolbar'
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[]
 	data: TData[]
+	handleUpdateRowSelection: (rowSelection: Record<string, boolean>) => void
 }
 
 export function DataTable<TData, TValue>({
 	columns,
-	data
+	data,
+	handleUpdateRowSelection
 }: DataTableProps<TData, TValue>) {
-	const [rowSelection, setRowSelection] = React.useState({})
+	const [rowSelection, setRowSelection] = React.useState<
+		Record<string, boolean>
+	>({})
+
+	React.useEffect(() => {
+		handleUpdateRowSelection(rowSelection)
+	}, [rowSelection])
+
 	const [columnVisibility, setColumnVisibility] =
 		React.useState<VisibilityState>({})
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(

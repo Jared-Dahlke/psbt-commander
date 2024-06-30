@@ -26,13 +26,15 @@ fn get_info_by_descriptor(descriptor: &str, change_descriptor: Option<&str>) -> 
 }
 
 #[tauri::command]
-fn create_psbt(descriptor: &str, change_descriptor: Option<&str>, amount: u64, recipient: &str) -> Result<String, String> {
+fn create_psbt(descriptor: &str, change_descriptor: Option<&str>, amount: u64, recipient: &str, utxo_txids: Vec<&str>) -> Result<String, String> {
 
+    println!("create_psbt input from tauri:  create_psbt: descriptor: {}, change_descriptor: {:?}, amount: {}, recipient: {}, utxo_txids: {:?}", descriptor, change_descriptor, amount, recipient, utxo_txids);
     let input = CreatePsbtInput {
         descriptor,
         change_descriptor,
         amount,  // Amount in satoshis
-        recipient
+        recipient,
+        utxo_txids
     };
     match bdk_wallet::BdkWallet::create_psbt(input) {
         Ok(psbt) => {
