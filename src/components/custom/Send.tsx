@@ -28,10 +28,40 @@ import { useDescriptors } from '@/hooks/useLocalStorage'
 import { useWalletInfo } from '@/hooks/useWalletInfo'
 import { DataTable } from '../utxo-table/components/data-table'
 import { columns } from '../utxo-table/components/columns'
+import {
+	isPermissionGranted,
+	requestPermission,
+	sendNotification
+} from '@tauri-apps/api/notification'
 
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, File } from 'lucide-react'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+
+import { writeTextFile, BaseDirectory } from '@tauri-apps/api/fs'
+
+async function downloadTextFile(content: string) {
+	const fileName = 'psbt.txt'
+
+	try {
+		await writeTextFile(fileName, content, { dir: BaseDirectory.Download })
+		console.log('File downloaded successfully!')
+
+		let permissionGranted = await isPermissionGranted()
+		if (!permissionGranted) {
+			const permission = await requestPermission()
+			permissionGranted = permission === 'granted'
+		}
+		if (permissionGranted) {
+			sendNotification({
+				title: 'Download Successful',
+				body: `File ${fileName} has been saved to your Downloads folder.`
+			})
+		}
+	} catch (error) {
+		console.error('Error downloading file:', error)
+	}
+}
 
 const formSchema = z.object({
 	toAddress: z.string(),
@@ -203,7 +233,20 @@ export const Send = () => {
 								</Alert>
 							)}
 							<Button type='submit'>Submit</Button>
-							<Textarea value={psbt} disabled rows={7} />
+
+							{psbt && (
+								<div className='flex flex-col gap-1 w-full items-end'>
+									<Button
+										onClick={() => downloadTextFile(psbt)}
+										size='sm'
+										variant='outline'
+										className='h-7 gap-1 text-sm'>
+										<File className='h-3.5 w-3.5' />
+										<span className='sr-only sm:not-sr-only'>Export</span>
+									</Button>
+									<Textarea value={psbt} disabled rows={7} />
+								</div>
+							)}
 						</CardFooter>
 					</form>
 				</Form>

@@ -1,6 +1,7 @@
 import {
 	Send,
-	SendIcon,
+	LucideSend,
+	SendHorizontal,
 	Home,
 	LineChart,
 	ListFilter,
@@ -73,7 +74,7 @@ export function App() {
 					<Tooltip>
 						<TooltipTrigger asChild>
 							<Link to='/send' className={getClasses('/send')}>
-								<SendIcon className='h-5 w-5 transition-all group-hover:scale-110' />
+								<SendHorizontal className='h-5 w-5 transition-all group-hover:scale-110' />
 								<span className='sr-only'>Send</span>
 							</Link>
 						</TooltipTrigger>
@@ -165,7 +166,7 @@ export function App() {
 								<a
 									href='send'
 									className='flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground'>
-									<SendIcon className='h-5 w-5' />
+									<LucideSend className='h-5 w-5' />
 									Send
 								</a>
 								{/* <a
