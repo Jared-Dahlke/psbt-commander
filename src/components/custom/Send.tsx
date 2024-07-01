@@ -21,9 +21,8 @@ import {
 	FormMessage
 } from '@/components/ui/form'
 import { invoke } from '@tauri-apps/api/tauri'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Textarea } from '../ui/textarea'
-import { UtxoTable } from '../utxo-table/utxo-table'
 import { useDescriptors } from '@/hooks/useLocalStorage'
 import { useWalletInfo } from '@/hooks/useWalletInfo'
 import { DataTable } from '../utxo-table/components/data-table'
@@ -34,11 +33,16 @@ import {
 	sendNotification
 } from '@tauri-apps/api/notification'
 
-import { AlertCircle, File } from 'lucide-react'
+import { AlertCircle, Download, File } from 'lucide-react'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 import { writeTextFile, BaseDirectory } from '@tauri-apps/api/fs'
+import { toast } from 'sonner'
+import { Label } from '../ui/label'
+import { CopyComponent } from './copy-component'
+import { useMemoolSpace } from '@/hooks/useMemoolSpace'
+import { FeeAlert } from './fee-alert'
 
 async function downloadTextFile(content: string) {
 	const fileName = 'psbt.txt'
@@ -47,6 +51,7 @@ async function downloadTextFile(content: string) {
 		await writeTextFile(fileName, content, { dir: BaseDirectory.Download })
 		console.log('File downloaded successfully!')
 
+		toast.success(`File ${fileName} has been saved to your Downloads folder.`)
 		let permissionGranted = await isPermissionGranted()
 		if (!permissionGranted) {
 			const permission = await requestPermission()
@@ -66,7 +71,8 @@ async function downloadTextFile(content: string) {
 const formSchema = z.object({
 	toAddress: z.string(),
 	amount: z.number().min(1),
-	utxoTxids: z.array(z.string()).min(1)
+	utxoTxids: z.array(z.string()).min(1, 'Please select at least one UTXO'),
+	fee: z.number().min(1)
 })
 
 export const Send = () => {
@@ -101,10 +107,8 @@ export const Send = () => {
 			changeDescriptor,
 			amount: values.amount,
 			recipient: values.toAddress,
-			utxoTxids: values.utxoTxids
-			// utxoTxids: [
-			// 	'026f4a09f73eced919209f2879e9be7d4e2455d3a5821d991f9557d17dc33d15'
-			// ]
+			utxoTxids: values.utxoTxids,
+			fee: values.fee
 		}
 
 		try {
@@ -126,10 +130,8 @@ export const Send = () => {
 	const rowSelectionVal = form.watch('utxoTxids')
 	console.log('rowSelectionVal', rowSelectionVal)
 
-	const values = form.getValues()
-
 	return (
-		<div>
+		<div className='space-y-8'>
 			{/* {info && JSON.stringify(form)} */}
 			<Card className='sm:col-span-2' x-chunk='dashboard-05-chunk-0'>
 				<CardHeader className='pb-3'>
@@ -166,61 +168,90 @@ export const Send = () => {
 									</FormItem>
 								)}
 							/>
-							<FormField
-								control={form.control}
-								name='amount'
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Amount in Satoshis</FormLabel>
-										<FormControl>
-											<Input
-												type='number'
-												placeholder='Enter amount here...'
-												{...field}
-												onChange={(e) =>
-													form.setValue('amount', Number(e.target.value), {
-														shouldValidate: true
-													})
-												}
-											/>
-										</FormControl>
-										<FormDescription>
-											The amount of satoshis to send.
-										</FormDescription>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<div>
-								<FormItem>
-									<FormLabel>UTXOs</FormLabel>
-									<FormDescription>
-										Select the UTXOs you would like to include in the PSBT.
-									</FormDescription>
-									<DataTable
-										handleUpdateRowSelection={(rowSelection) => {
-											console.log('rowSelection', rowSelection)
-											const selectedTxids = Object.keys(rowSelection).map(
-												(index) => {
-													return info?.utxos[parseInt(index)].txid
-												}
-											)
-
-											console.log(' about to set form value', selectedTxids)
-
-											form.setValue('utxoTxids', selectedTxids)
-										}}
-										data={info?.utxos || []}
-										columns={columns}
-									/>
-
-									{form.formState.errors.utxoTxids && (
-										<FormMessage>
-											{form.formState.errors.utxoTxids.message}
-										</FormMessage>
+							<div className='flex gap-8 w-full items-center'>
+								<FormField
+									control={form.control}
+									name='amount'
+									render={({ field }) => (
+										<FormItem className='w-1/3'>
+											<FormLabel>Amount in Satoshis</FormLabel>
+											<FormControl>
+												<Input
+													type='number'
+													placeholder='Enter amount here...'
+													{...field}
+													onChange={(e) =>
+														form.setValue('amount', Number(e.target.value), {
+															shouldValidate: true
+														})
+													}
+												/>
+											</FormControl>
+											<FormDescription>
+												The amount of satoshis to send.
+											</FormDescription>
+											<FormMessage />
+										</FormItem>
 									)}
-								</FormItem>
+								/>
+
+								<FormField
+									control={form.control}
+									name='fee'
+									render={({ field }) => (
+										<FormItem className='w-1/6'>
+											<FormLabel>Fee</FormLabel>
+											<FormControl>
+												<Input
+													type='number'
+													placeholder='Enter fee rate here...'
+													{...field}
+													onChange={(e) =>
+														form.setValue('fee', Number(e.target.value), {
+															shouldValidate: true
+														})
+													}
+												/>
+											</FormControl>
+											<FormDescription>
+												The fee rate in satoshis per byte.
+											</FormDescription>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+
+								<FeeAlert />
 							</div>
+
+							<FormItem>
+								<FormLabel>UTXOs</FormLabel>
+
+								<DataTable
+									handleUpdateRowSelection={(rowSelection) => {
+										console.log('rowSelection', rowSelection)
+										const selectedTxids = Object.keys(rowSelection).map(
+											(index) => {
+												return info?.utxos[parseInt(index)].txid
+											}
+										)
+
+										console.log(' about to set form value', selectedTxids)
+
+										form.setValue('utxoTxids', selectedTxids)
+									}}
+									data={info?.utxos || []}
+									columns={columns}
+								/>
+								<FormDescription>
+									Select the UTXOs you would like to include in the PSBT.
+								</FormDescription>
+								{form.formState.errors.utxoTxids && (
+									<FormMessage>
+										{form.formState.errors.utxoTxids.message}
+									</FormMessage>
+								)}
+							</FormItem>
 						</CardContent>
 						<CardFooter className='flex flex-col gap-5 items-start'>
 							{form.formState.errors.root && (
@@ -236,14 +267,20 @@ export const Send = () => {
 
 							{psbt && (
 								<div className='flex flex-col gap-1 w-full items-end'>
-									<Button
-										onClick={() => downloadTextFile(psbt)}
-										size='sm'
-										variant='outline'
-										className='h-7 gap-1 text-sm'>
-										<File className='h-3.5 w-3.5' />
-										<span className='sr-only sm:not-sr-only'>Export</span>
-									</Button>
+									<div className='flex gap-3'>
+										<Button
+											onClick={(e) => {
+												e.preventDefault()
+												downloadTextFile(psbt)
+											}}
+											size='sm'
+											variant='outline'
+											className='h-7 gap-1 text-sm'>
+											<Download className='h-3.5 w-3.5' />
+											<span className='sr-only sm:not-sr-only'>Download</span>
+										</Button>
+										<CopyComponent textToCopy={psbt} />
+									</div>
 									<Textarea value={psbt} disabled rows={7} />
 								</div>
 							)}

@@ -7,13 +7,16 @@ import {
 	ListFilter,
 	MoreVertical,
 	Package,
+	Plus,
 	Package2,
 	PanelLeft,
 	Search,
 	Settings,
 	ShoppingCart,
 	Truck,
-	Users2
+	Users2,
+	ListChecks,
+	List
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -56,12 +59,6 @@ export function App() {
 		<div className='flex min-h-screen w-full flex-col bg-muted/40'>
 			<aside className='fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex'>
 				<nav className='flex flex-col items-center gap-4 px-2 sm:py-5'>
-					{/* <a
-						href='#'
-						className='group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base'>
-						<Package2 className='h-4 w-4 transition-all group-hover:scale-110' />
-						<span className='sr-only'>Acme Inc</span>
-					</a> */}
 					<Tooltip>
 						<TooltipTrigger asChild>
 							<Link to='/' className={getClasses('/')}>
@@ -74,56 +71,11 @@ export function App() {
 					<Tooltip>
 						<TooltipTrigger asChild>
 							<Link to='/send' className={getClasses('/send')}>
-								<SendHorizontal className='h-5 w-5 transition-all group-hover:scale-110' />
-								<span className='sr-only'>Send</span>
+								<Plus className='h-5 w-5 transition-all group-hover:scale-110' />
+								<span className='sr-only'>Create PSBT</span>
 							</Link>
 						</TooltipTrigger>
-						<TooltipContent side='right'>Send</TooltipContent>
-					</Tooltip>
-
-					{/* <Tooltip>
-						<TooltipTrigger asChild>
-							<a
-								href='#'
-								className='flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8'>
-								<ShoppingCart className='h-5 w-5' />
-								<span className='sr-only'>Orders</span>
-							</a>
-						</TooltipTrigger>
-						<TooltipContent side='right'>Orders</TooltipContent>
-					</Tooltip> */}
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<a
-								href='#'
-								className='flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8'>
-								<Package className='h-5 w-5' />
-								<span className='sr-only'>Products</span>
-							</a>
-						</TooltipTrigger>
-						<TooltipContent side='right'>Products</TooltipContent>
-					</Tooltip>
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<a
-								href='#'
-								className='flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8'>
-								<Users2 className='h-5 w-5' />
-								<span className='sr-only'>Customers</span>
-							</a>
-						</TooltipTrigger>
-						<TooltipContent side='right'>Customers</TooltipContent>
-					</Tooltip>
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<a
-								href='#'
-								className='flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8'>
-								<LineChart className='h-5 w-5' />
-								<span className='sr-only'>Analytics</span>
-							</a>
-						</TooltipTrigger>
-						<TooltipContent side='right'>Analytics</TooltipContent>
+						<TooltipContent side='right'>Create PSBT</TooltipContent>
 					</Tooltip>
 				</nav>
 				<nav className='mt-auto flex flex-col items-center gap-4 px-2 sm:py-5'>
@@ -169,12 +121,7 @@ export function App() {
 									<LucideSend className='h-5 w-5' />
 									Send
 								</a>
-								{/* <a
-									href='#'
-									className='flex items-center gap-4 px-2.5 text-foreground'>
-									<ShoppingCart className='h-5 w-5' />
-									Orders
-								</a> */}
+
 								<a
 									href='#'
 									className='flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground'>
@@ -199,9 +146,9 @@ export function App() {
 
 					<div className='flex'>
 						<div>
-							<h1 className='text-4xl font-extrabold mt-5'>UTXO Commander</h1>
+							<h1 className='text-4xl font-extrabold mt-5'>PSBT Commander</h1>
 							<CardDescription className='text-lg mt-1'>
-								A Rust BDK powered UTXO Manager
+								A Rust BDK powered PSBT Creator
 							</CardDescription>
 						</div>
 					</div>
