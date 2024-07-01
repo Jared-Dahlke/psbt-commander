@@ -21,9 +21,9 @@ import {
 	FormMessage
 } from '@/components/ui/form'
 import { invoke } from '@tauri-apps/api/tauri'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Textarea } from '../ui/textarea'
-import { useDescriptors } from '@/hooks/useLocalStorage'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { useWalletInfo } from '@/hooks/useWalletInfo'
 import { DataTable } from '../utxo-table/components/data-table'
 import { columns } from '../utxo-table/components/columns'
@@ -33,15 +33,13 @@ import {
 	sendNotification
 } from '@tauri-apps/api/notification'
 
-import { AlertCircle, Download, File } from 'lucide-react'
+import { AlertCircle, Download } from 'lucide-react'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 import { writeTextFile, BaseDirectory } from '@tauri-apps/api/fs'
 import { toast } from 'sonner'
-import { Label } from '../ui/label'
 import { CopyComponent } from './copy-component'
-import { useMemoolSpace } from '@/hooks/useMemoolSpace'
 import { FeeAlert } from './fee-alert'
 
 async function downloadTextFile(content: string) {
@@ -85,18 +83,19 @@ export const Send = () => {
 		}
 	})
 
-	const { changeDescriptor, setChangeDescriptor, descriptor, setDescriptor } =
-		useDescriptors()
+	const {
+		changeDescriptor,
+		setChangeDescriptor,
+		descriptor,
+		setDescriptor,
+		clientUrl,
+		network
+	} = useLocalStorage()
 
 	const walletInfoQuery = useWalletInfo({ descriptor, changeDescriptor })
 	const { data: info } = walletInfoQuery
 
-	// 2. Define a submit handler.
 	async function onSubmit(values: z.infer<typeof formSchema>) {
-		// Do something with the form values.
-		// ✅ This will be type-safe and validated.
-		console.log(values)
-
 		setPsbt('')
 
 		// clear root error
@@ -108,8 +107,12 @@ export const Send = () => {
 			amount: values.amount,
 			recipient: values.toAddress,
 			utxoTxids: values.utxoTxids,
-			fee: values.fee
+			fee: values.fee,
+			url: clientUrl,
+			networktype: network
 		}
+
+		console.log('input', input)
 
 		try {
 			const res = (await invoke('create_psbt', input)) as unknown as any[]
@@ -126,9 +129,6 @@ export const Send = () => {
 			console.error('invoke error result:', e)
 		}
 	}
-
-	const rowSelectionVal = form.watch('utxoTxids')
-	console.log('rowSelectionVal', rowSelectionVal)
 
 	return (
 		<div className='space-y-8'>
@@ -213,9 +213,7 @@ export const Send = () => {
 													}
 												/>
 											</FormControl>
-											<FormDescription>
-												The fee rate in satoshis per byte.
-											</FormDescription>
+											<FormDescription>Sats/vb</FormDescription>
 											<FormMessage />
 										</FormItem>
 									)}
@@ -236,9 +234,11 @@ export const Send = () => {
 											}
 										)
 
-										console.log(' about to set form value', selectedTxids)
+										const selectionRes = z
+											.array(z.string())
+											.parse(selectedTxids)
 
-										form.setValue('utxoTxids', selectedTxids)
+										form.setValue('utxoTxids', selectionRes)
 									}}
 									data={info?.utxos || []}
 									columns={columns}

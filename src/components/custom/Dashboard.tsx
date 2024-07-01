@@ -32,13 +32,13 @@ import { Tabs, TabsContent } from '@/components/ui/tabs'
 
 import SatoshiIcon from '/satoshi.svg'
 import { useWalletInfo } from '@/hooks/useWalletInfo'
-import { useDescriptors } from '@/hooks/useLocalStorage'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { FormItem } from '../ui/form'
 import { Label } from '../ui/label'
 
 export function Dashboard() {
 	const { changeDescriptor, setChangeDescriptor, descriptor, setDescriptor } =
-		useDescriptors()
+		useLocalStorage()
 
 	const walletInfoQuery = useWalletInfo({ descriptor, changeDescriptor })
 	const { data: info } = walletInfoQuery

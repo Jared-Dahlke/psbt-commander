@@ -1,8 +1,20 @@
 import useLocalStorageState from 'use-local-storage-state'
 
-export const useDescriptors = () => {
+export const useLocalStorage = () => {
 	const [descriptor, setDescriptor] = useLocalStorageState<string>('descriptor')
 	const [changeDescriptor, setChangeDescriptor] =
 		useLocalStorageState<string>('changeDescriptor')
-	return { descriptor, setDescriptor, changeDescriptor, setChangeDescriptor }
+
+	const settings = localStorage.getItem('settings')
+	const clientUrl = settings ? JSON.parse(settings).clientUrl : ''
+	const network = settings ? JSON.parse(settings).network : ''
+
+	return {
+		descriptor,
+		setDescriptor,
+		changeDescriptor,
+		setChangeDescriptor,
+		clientUrl,
+		network
+	}
 }

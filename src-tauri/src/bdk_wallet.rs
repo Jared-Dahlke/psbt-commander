@@ -1,9 +1,7 @@
 use std::str::FromStr;
 
-use bdk::bitcoin::consensus::serialize;
-
 use bdk::bitcoin::psbt::PartiallySignedTransaction;
-use bdk::bitcoin::{OutPoint, Script, Weight};
+use bdk::bitcoin::{network, OutPoint, Script, Weight};
 use bdk::wallet::coin_selection::{decide_change, CoinSelectionAlgorithm, CoinSelectionResult};
 use bdk::wallet::AddressIndex;
 use bdk::{blockchain, miniscript, FeeRate, KeychainKind, SyncOptions, Wallet, WeightedUtxo};
@@ -43,6 +41,8 @@ pub struct CreatePsbtInput<'a> {
     pub recipient: &'a str,
     pub utxo_txids: Vec<&'a str>,
     pub fee: f32,
+    pub url: &'a str,
+    pub network: bdk::bitcoin::Network
 }
 
 #[derive(Debug)]
@@ -113,15 +113,17 @@ impl BdkWallet {
     
     fn create_wallet(
         descriptor: &str,
-        change_descriptor: Option<&str>
+        change_descriptor: Option<&str>,
+        url: &str,
+        network: bdk::bitcoin::Network
     ) -> Result<Wallet<MemoryDatabase>, bdk::Error>{
         // let client = Client::new("ssl://electrum.blockstream.info:60002")?;
-        let client = Client::new("tcp://localhost:50000")?;
+        let client = Client::new(url)?;
         let blockchain = ElectrumBlockchain::from(client);
         let wallet: Wallet<MemoryDatabase> = Wallet::new(
             descriptor,
             change_descriptor,
-            bdk::bitcoin::Network::Regtest,         
+            network,         
             MemoryDatabase::default(),
         )?;
     
@@ -136,10 +138,14 @@ impl BdkWallet {
 
     pub fn get_info_by_descriptor(
         descriptor: &str,
-        change_descriptor: Option<&str>
+        change_descriptor: Option<&str>,
+        url: &str,
+        network: bdk::bitcoin::Network
     ) -> Result<WalletInfo, bdk::Error> {
+
+        println!("descriptor: {:#?}", descriptor);
         
-        let wallet = BdkWallet::create_wallet(descriptor, change_descriptor)?;
+        let wallet = BdkWallet::create_wallet(descriptor, change_descriptor, url, network)?;
         let address_info = wallet.get_address(AddressIndex::New)?;
         let new_address = address_info.to_string();
 
@@ -166,6 +172,8 @@ impl BdkWallet {
         Ok(base64::encode(&raw_psbt))
     }
 
+   
+
     pub fn create_psbt(
         CreatePsbtInput {
             descriptor,
@@ -174,14 +182,16 @@ impl BdkWallet {
             recipient,
             utxo_txids,
             fee,
-        }: CreatePsbtInput,
+            url,
+            network
+        }: CreatePsbtInput
     ) -> Result<String, bdk::Error> {
-        let client = Client::new("tcp://localhost:50000")?;
+        let client = Client::new(url)?;
         let blockchain = ElectrumBlockchain::from(client);
         let wallet = Wallet::new(
             descriptor,
             change_descriptor,
-            bdk::bitcoin::Network::Regtest,         
+            network,         
             MemoryDatabase::default(),
         )?;
     
@@ -231,9 +241,6 @@ impl BdkWallet {
         let (mut psbt, details) = tx_builder.finish()?;
 
         let serialized_psbt = BdkWallet::serialize_psbt(&psbt)?;
-
-         println!("psbt details:{:#?}", details);
-         println!("serialized_psbt: {}", serialized_psbt);
 
         Ok(serialized_psbt)
     }

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { invoke } from '@tauri-apps/api/tauri'
 import { z } from 'zod'
+import { useLocalStorage } from './useLocalStorage'
 
 export const UtxoSchema = z.object({
 	txid: z.string(),
@@ -22,13 +23,20 @@ interface IProps {
 	changeDescriptor: string | undefined
 }
 export const useWalletInfo = ({ descriptor, changeDescriptor }: IProps) => {
+	console.log('useWalletInfo', descriptor, changeDescriptor)
+	const { clientUrl, network } = useLocalStorage()
+	console.log(clientUrl, network)
 	const walletInfoQuery = useQuery({
-		queryKey: ['wallet_info', descriptor, changeDescriptor],
+		queryKey: ['wallet_info', descriptor, changeDescriptor, clientUrl, network],
 		queryFn: async () => {
+			console.log('calling function')
 			const res = await invoke('get_info_by_descriptor', {
 				descriptor,
-				change_descriptor: changeDescriptor
+				changedescriptor: changeDescriptor,
+				url: clientUrl,
+				networktype: network
 			})
+			console.log('res', res)
 			return WalletInfoSchema.parse(res)
 		},
 		enabled: !!descriptor && !!changeDescriptor

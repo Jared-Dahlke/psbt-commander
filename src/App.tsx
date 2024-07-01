@@ -4,19 +4,13 @@ import {
 	SendHorizontal,
 	Home,
 	LineChart,
-	ListFilter,
-	MoreVertical,
 	Package,
 	Plus,
 	Package2,
 	PanelLeft,
 	Search,
 	Settings,
-	ShoppingCart,
-	Truck,
-	Users2,
-	ListChecks,
-	List
+	Users2
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -37,13 +31,12 @@ import {
 	TooltipTrigger
 } from '@/components/ui/tooltip'
 
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Link, Outlet, useLocation } from 'react-router-dom'
 import { cn } from './lib/utils'
-import path from 'path'
+import { Footer } from './components/custom/footer'
 
 export function App() {
 	const pathname = useLocation().pathname
-	const isSend = pathname.includes('send')
 
 	const getClasses = (path: string) => {
 		const isActive = pathname === path
@@ -56,7 +49,7 @@ export function App() {
 	}
 
 	return (
-		<div className='flex min-h-screen w-full flex-col bg-muted/40'>
+		<div className='relative flex min-h-screen w-full flex-col justify-between bg-muted/40'>
 			<aside className='fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex'>
 				<nav className='flex flex-col items-center gap-4 px-2 sm:py-5'>
 					<Tooltip>
@@ -81,12 +74,10 @@ export function App() {
 				<nav className='mt-auto flex flex-col items-center gap-4 px-2 sm:py-5'>
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<a
-								href='#'
-								className='flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8'>
+							<Link to='/settings' className={getClasses('/settings')}>
 								<Settings className='h-5 w-5' />
 								<span className='sr-only'>Settings</span>
-							</a>
+							</Link>
 						</TooltipTrigger>
 						<TooltipContent side='right'>Settings</TooltipContent>
 					</Tooltip>
@@ -155,6 +146,7 @@ export function App() {
 				</header>
 				<main className='grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8'>
 					<Outlet />
+					{/* <Footer /> */}
 				</main>
 			</div>
 		</div>
