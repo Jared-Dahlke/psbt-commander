@@ -1,7 +1,6 @@
 import {
 	Card,
 	CardContent,
-	CardDescription,
 	CardFooter,
 	CardHeader,
 	CardTitle
@@ -74,7 +73,7 @@ const formSchema = z.object({
 })
 
 export const Send = () => {
-	const [psbt, setPsbt] = useState('')
+	const [psbt, setPsbt] = useState<string>('')
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
@@ -83,16 +82,9 @@ export const Send = () => {
 		}
 	})
 
-	const {
-		changeDescriptor,
-		setChangeDescriptor,
-		descriptor,
-		setDescriptor,
-		clientUrl,
-		network
-	} = useLocalStorage()
+	const { changeDescriptor, descriptor, clientUrl, network } = useLocalStorage()
 
-	const walletInfoQuery = useWalletInfo({ descriptor, changeDescriptor })
+	const walletInfoQuery = useWalletInfo()
 	const { data: info } = walletInfoQuery
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -112,12 +104,10 @@ export const Send = () => {
 			networktype: network
 		}
 
-		console.log('input', input)
-
 		try {
-			const res = (await invoke('create_psbt', input)) as unknown as any[]
-			console.log('res', res)
-			setPsbt(res)
+			const res = await invoke('create_psbt', input)
+			const parsedRes = z.string().parse(res)
+			setPsbt(parsedRes)
 		} catch (e) {
 			// if (e instanceof string) {
 			// 	console.error('invoke error message is instnace:', e)
@@ -204,7 +194,7 @@ export const Send = () => {
 											<FormControl>
 												<Input
 													type='number'
-													placeholder='Enter fee rate here...'
+													placeholder='Enter fee rate...'
 													{...field}
 													onChange={(e) =>
 														form.setValue('fee', Number(e.target.value), {
@@ -281,7 +271,7 @@ export const Send = () => {
 										</Button>
 										<CopyComponent textToCopy={psbt} />
 									</div>
-									<Textarea value={psbt} disabled rows={7} />
+									<Textarea value={psbt} disabled rows={3} />
 								</div>
 							)}
 						</CardFooter>

@@ -1,4 +1,4 @@
-import { Info, Terminal } from 'lucide-react'
+import { Info } from 'lucide-react'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useMemoolSpace } from '@/hooks/useMemoolSpace'

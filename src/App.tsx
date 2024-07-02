@@ -1,27 +1,17 @@
 import {
-	Send,
 	LucideSend,
-	SendHorizontal,
 	Home,
 	LineChart,
 	Package,
 	Plus,
 	Package2,
 	PanelLeft,
-	Search,
 	Settings,
 	Users2
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle
-} from '@/components/ui/card'
+import { CardDescription } from '@/components/ui/card'
 
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 
@@ -31,22 +21,38 @@ import {
 	TooltipTrigger
 } from '@/components/ui/tooltip'
 
-import { Link, Outlet, useLocation } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { cn } from './lib/utils'
-import { Footer } from './components/custom/footer'
+import { useWalletInfo } from './hooks/useWalletInfo'
+import { useEffect } from 'react'
 
 export function App() {
 	const pathname = useLocation().pathname
+	const navigate = useNavigate()
+
+	const walletQuery = useWalletInfo()
+
+	const userIsInactive = walletQuery?.data?.new_address === undefined
+	const doRedirect = userIsInactive && pathname !== '/settings'
 
 	const getClasses = (path: string) => {
 		const isActive = pathname === path
+
+		const pathIsDisabled = (path === '/send' || path === '/') && userIsInactive
 		return cn(
 			'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-all md:h-8 md:w-8',
 			isActive
 				? 'rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base'
-				: 'hover:text-foreground'
+				: 'hover:text-foreground hover:bg-muted hover:rounded-full',
+			pathIsDisabled && 'opacity-50 cursor-not-allowed'
 		)
 	}
+
+	useEffect(() => {
+		if (doRedirect) {
+			navigate('/settings')
+		}
+	}, [doRedirect])
 
 	return (
 		<div className='relative flex min-h-screen w-full flex-col justify-between bg-muted/40'>

@@ -18,14 +18,8 @@ export const WalletInfoSchema = z.object({
 
 export type WalletInfo = z.infer<typeof WalletInfoSchema>
 
-interface IProps {
-	descriptor: string | undefined
-	changeDescriptor: string | undefined
-}
-export const useWalletInfo = ({ descriptor, changeDescriptor }: IProps) => {
-	console.log('useWalletInfo', descriptor, changeDescriptor)
-	const { clientUrl, network } = useLocalStorage()
-	console.log(clientUrl, network)
+export const useWalletInfo = () => {
+	const { clientUrl, network, descriptor, changeDescriptor } = useLocalStorage()
 	const walletInfoQuery = useQuery({
 		queryKey: ['wallet_info', descriptor, changeDescriptor, clientUrl, network],
 		queryFn: async () => {

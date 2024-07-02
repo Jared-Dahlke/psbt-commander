@@ -1,6 +1,6 @@
-import React, { ReactElement, useState } from 'react'
+import { useState } from 'react'
 import { Button } from '../ui/button'
-import { CopyIcon, File } from 'lucide-react'
+import { CopyIcon } from 'lucide-react'
 
 export const CopyComponent = ({ textToCopy }: { textToCopy: string }) => {
 	const [copied, setCopied] = useState(false)

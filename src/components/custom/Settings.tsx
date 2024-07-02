@@ -1,13 +1,11 @@
 import {
 	Card,
 	CardContent,
-	CardDescription,
 	CardFooter,
 	CardHeader,
 	CardTitle
 } from '@/components/ui/card'
 import { Input } from '../ui/input'
-import { Button } from '../ui/button'
 import z from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -31,6 +29,7 @@ import useFormPersist from 'react-hook-form-persist'
 import { useTestConnection } from '@/hooks/useTestConnection'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { Label } from '../ui/label'
+import { useWalletInfo } from '@/hooks/useWalletInfo'
 
 const formSchema = z.object({
 	clientUrl: z.string(),
@@ -57,6 +56,11 @@ const networks = [
 ]
 
 export const Settings = () => {
+	const { changeDescriptor, setChangeDescriptor, descriptor, setDescriptor } =
+		useLocalStorage()
+
+	const wallet = useWalletInfo()
+
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema)
 	})
@@ -70,12 +74,9 @@ export const Settings = () => {
 		url: form.watch('clientUrl')
 	})
 
-	console.log('network', form.watch('network'))
-
 	return (
 		<div className='space-y-8'>
-			{/* {info && JSON.stringify(form)} */}
-			<Card className='sm:col-span-2' x-chunk='dashboard-05-chunk-0'>
+			<Card className='sm:col-span-2'>
 				<CardHeader className='pb-3'>
 					<CardTitle>Settings</CardTitle>
 					{/* <CardDescription className='max-w-lg text-balance leading-relaxed'>
@@ -107,17 +108,6 @@ export const Settings = () => {
 											The URL to your Electrum Server.
 										</FormDescription>
 										<FormMessage />
-										{status === 'Connected' ? (
-											<div className='flex gap-2 items-center'>
-												<Label>Connection is good!</Label>
-												<div className='rounded-full bg-green-500 h-3 w-3' />
-											</div>
-										) : (
-											<div className='flex gap-2 items-center'>
-												<Label>Not Connected</Label>
-												<div className='rounded-full bg-red-500 h-3 w-3' />
-											</div>
-										)}
 									</FormItem>
 								)}
 							/>
@@ -162,9 +152,60 @@ export const Settings = () => {
 									</AlertDescription>
 								</Alert>
 							)} */}
+							<div>
+								{status === 'Connected' ? (
+									<div className='flex gap-2 items-center'>
+										<div className='rounded-full bg-green-500 h-3 w-3' />
+										<Label>Successfully Connected!</Label>
+									</div>
+								) : (
+									<div className='flex gap-2 items-center'>
+										<div className='rounded-full bg-red-500 h-3 w-3' />
+										<Label>Not Connected</Label>
+									</div>
+								)}
+							</div>
 						</CardFooter>
 					</form>
 				</Form>
+			</Card>
+			<Card className='sm:col-span-2' x-chunk='dashboard-05-chunk-0'>
+				<CardHeader className='pb-3'>
+					<CardTitle>Your Descriptor</CardTitle>
+				</CardHeader>
+				<CardContent className='space-y-4'>
+					<FormItem>
+						<Label>Descriptor</Label>
+						<Input
+							onChange={(e) => setDescriptor(e.currentTarget.value)}
+							value={descriptor}
+							placeholder='Please enter descriptor...'
+							className='w-full'
+						/>
+					</FormItem>
+					<FormItem>
+						<Label>Change Descriptor</Label>
+						<Input
+							onChange={(e) => setChangeDescriptor(e.currentTarget.value)}
+							value={changeDescriptor}
+							placeholder='Please enter change descriptor...'
+							className='w-full'
+						/>
+					</FormItem>
+				</CardContent>
+				<CardFooter>
+					{!!wallet?.data?.new_address ? (
+						<div className='flex gap-2 items-center'>
+							<div className='rounded-full bg-green-500 h-3 w-3' />
+							<Label>Successfully found wallet!</Label>
+						</div>
+					) : (
+						<div className='flex gap-2 items-center'>
+							<div className='rounded-full bg-red-500 h-3 w-3' />
+							<Label>No wallet found</Label>
+						</div>
+					)}
+				</CardFooter>
 			</Card>
 		</div>
 	)

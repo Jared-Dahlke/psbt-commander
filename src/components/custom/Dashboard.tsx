@@ -6,7 +6,6 @@ import {
 	Card,
 	CardContent,
 	CardDescription,
-	CardFooter,
 	CardHeader,
 	CardTitle
 } from '@/components/ui/card'
@@ -14,12 +13,10 @@ import {
 	DropdownMenu,
 	DropdownMenuCheckboxItem,
 	DropdownMenuContent,
-	DropdownMenuItem,
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
 import {
 	Table,
 	TableBody,
@@ -32,44 +29,13 @@ import { Tabs, TabsContent } from '@/components/ui/tabs'
 
 import SatoshiIcon from '/satoshi.svg'
 import { useWalletInfo } from '@/hooks/useWalletInfo'
-import { useLocalStorage } from '@/hooks/useLocalStorage'
-import { FormItem } from '../ui/form'
-import { Label } from '../ui/label'
 
 export function Dashboard() {
-	const { changeDescriptor, setChangeDescriptor, descriptor, setDescriptor } =
-		useLocalStorage()
-
-	const walletInfoQuery = useWalletInfo({ descriptor, changeDescriptor })
+	const walletInfoQuery = useWalletInfo()
 	const { data: info } = walletInfoQuery
 
 	return (
 		<>
-			<Card className='sm:col-span-2' x-chunk='dashboard-05-chunk-0'>
-				<CardHeader className='pb-3'>
-					<CardTitle>Your Descriptor</CardTitle>
-				</CardHeader>
-				<CardContent className='space-y-4'>
-					<FormItem>
-						<Label>Descriptor</Label>
-						<Input
-							onChange={(e) => setDescriptor(e.currentTarget.value)}
-							value={descriptor}
-							placeholder='Please enter descriptor...'
-							className='w-full'
-						/>
-					</FormItem>
-					<FormItem>
-						<Label>Change Descriptor</Label>
-						<Input
-							onChange={(e) => setChangeDescriptor(e.currentTarget.value)}
-							value={changeDescriptor}
-							placeholder='Please enter change descriptor...'
-							className='w-full'
-						/>
-					</FormItem>
-				</CardContent>
-			</Card>
 			<div className='grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2'>
 				<div className='grid gap-4 sm:grid-cols-2'>
 					<Card x-chunk='dashboard-01-chunk-0'>

@@ -6,7 +6,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "bitcoin-wallet",
+    "productName": "PSBT Commander",
     "version": "0.0.0"
   },
   "tauri": {
@@ -29,7 +29,7 @@
     },
     "windows": [
       {
-        "title": "bitcoin-wallet",
+        "title": "PSBT Commander",
         "width": 800,
         "height": 600
       }
@@ -40,7 +40,7 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "com.tauri.dev",
+      "identifier": "psbt.commander",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
