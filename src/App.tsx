@@ -7,7 +7,10 @@ import {
 	Package2,
 	PanelLeft,
 	Settings,
-	Users2
+	Users2,
+	Satellite,
+	SatelliteDish,
+	RadioTower
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -25,6 +28,7 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { cn } from './lib/utils'
 import { useWalletInfo } from './hooks/useWalletInfo'
 import { useEffect } from 'react'
+import { paths } from './constants'
 
 export function App() {
 	const pathname = useLocation().pathname
@@ -33,12 +37,12 @@ export function App() {
 	const walletQuery = useWalletInfo()
 
 	const userIsInactive = walletQuery?.data?.new_address === undefined
-	const doRedirect = userIsInactive && pathname !== '/settings'
+	const doRedirect = userIsInactive && pathname !== paths.SETTINGS
 
 	const getClasses = (path: string) => {
 		const isActive = pathname === path
 
-		const pathIsDisabled = (path === '/send' || path === '/') && userIsInactive
+		const pathIsDisabled = path !== paths.SETTINGS && userIsInactive
 		return cn(
 			'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-all md:h-8 md:w-8',
 			isActive
@@ -48,11 +52,11 @@ export function App() {
 		)
 	}
 
-	useEffect(() => {
-		if (doRedirect) {
-			navigate('/settings')
-		}
-	}, [doRedirect])
+	// useEffect(() => {
+	// 	if (doRedirect) {
+	// 		navigate(paths.SETTINGS)
+	// 	}
+	// }, [doRedirect])
 
 	return (
 		<div className='relative flex min-h-screen w-full flex-col justify-between bg-muted/40'>
@@ -60,7 +64,9 @@ export function App() {
 				<nav className='flex flex-col items-center gap-4 px-2 sm:py-5'>
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<Link to='/' className={getClasses('/')}>
+							<Link
+								to={paths.DASHBOARD}
+								className={getClasses(paths.DASHBOARD)}>
 								<Home className='h-5 w-5' />
 								<span className='sr-only'>Dashboard</span>
 							</Link>
@@ -69,18 +75,31 @@ export function App() {
 					</Tooltip>
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<Link to='/send' className={getClasses('/send')}>
+							<Link
+								to={paths.CREATE_PSBT}
+								className={getClasses(paths.CREATE_PSBT)}>
 								<Plus className='h-5 w-5 transition-all group-hover:scale-110' />
 								<span className='sr-only'>Create PSBT</span>
 							</Link>
 						</TooltipTrigger>
 						<TooltipContent side='right'>Create PSBT</TooltipContent>
 					</Tooltip>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Link
+								to={paths.BROADCAST}
+								className={getClasses(paths.BROADCAST)}>
+								<RadioTower className='h-5 w-5 transition-all group-hover:scale-110' />
+								<span className='sr-only'>Broadcast</span>
+							</Link>
+						</TooltipTrigger>
+						<TooltipContent side='right'>Broadcast</TooltipContent>
+					</Tooltip>
 				</nav>
 				<nav className='mt-auto flex flex-col items-center gap-4 px-2 sm:py-5'>
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<Link to='/settings' className={getClasses('/settings')}>
+							<Link to={paths.SETTINGS} className={getClasses(paths.SETTINGS)}>
 								<Settings className='h-5 w-5' />
 								<span className='sr-only'>Settings</span>
 							</Link>

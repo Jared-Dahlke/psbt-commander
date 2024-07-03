@@ -94,3 +94,138 @@
     
     //     Ok(wallet)
     // }
+
+
+
+// #[tauri::command]
+// fn hwiget() -> Result<(), Error> {
+//     // Find information about devices
+//     let devices = HWIClient::enumerate()?;
+//     let device = devices.first().expect("No devices");
+//     // Create a client for a device
+//     let client = HWIClient::get_client(&device, true, bitcoin::Network::Regtest.into())?;
+//     // Display the address from path
+//     let derivation_path = DerivationPath::from_str("m/44'/1'/0'/0/0")?;
+//     let hwi_address =
+//         client.display_address_with_path(&derivation_path, types::HWIAddressType::Tap)?;
+//     println!("{}", hwi_address.address);
+//     Ok(())
+// }
+
+
+// fn get_hwi() -> Result<(), Error> {
+//     // Find information about devices
+//     let mut devices = HWIClient::enumerate()?;
+//     if devices.is_empty() {
+//         panic!("No device found!");
+//     }
+//     let device = devices.remove(0)?;
+//     // Create a client for a device
+//     let client = HWIClient::get_client(&device, true, bitcoin::Network::Regtest.into())?;
+//     // Display the address from path
+//    // let derivation_path = DerivationPath::from_str("m/44'/1'/0'/0/0").unwrap();
+//    let account: Option<u32> = Some(1);
+//    let descriptors = client.get_descriptors(account).into()?;
+//     //let hwi_address =
+//       //  client.display_address_with_path(&derivation_path, types::HWIAddressType::Tap)?;
+//    // println!("{}", hwi_address.address.assume_checked());
+// //    let printable_descriptors = descriptors.iter().map(|descriptor| {
+// //         format!("Descriptor: {}", descriptor)
+// //     }).collect::<Vec<String>>();
+// //     println!("descriptors from HW {}", );
+//     Ok(())
+// }
+
+// #[tauri::command]
+// fn get_hw_info() -> Result<(), tauri::Error> {
+//     match get_hw() {
+//         Ok(_) => {
+//             println!("HWI get_hw_info success");
+//             Ok(())
+//         },
+//         Err(e) => {
+//             eprintln!("Error get_hw_info: {}", e);
+//             Err(e)
+//         },
+//     }
+// }
+
+
+#[tauri::command]
+fn get_hw_descriptors() -> Result<Vec<String>, String> {
+    get_descriptors::<String>().map_err(|e| e.to_string())
+}
+
+
+fn get_descriptors<T>() -> Result<Vec<String>, Error> 
+where T: ToDescriptor + DeserializeOwned + Debug,
+{
+    println!("get_descriptors");
+    // Find information about devices
+   // let mut devices = HWIClient::enumerate()?;
+
+   let mut devices = match HWIClient::enumerate() {
+    Ok(devices) => devices,
+    Err(e) => {
+       println!("Error: {:?}", e);
+        return Err(e);
+    }
+};
+
+
+    if devices.is_empty() {
+        panic!("No device found!");
+    }
+    // print devices
+    println!("devices: {:?}", devices);
+    let device = devices.remove(0)?;
+    // Create a client for a device
+    let client = HWIClient::get_client(&device, true, bitcoin::Network::Regtest.into())?;
+    // Get descriptors
+      //  let account: Option<u32> = Some(1);
+    //let descriptors: types::HWIDescriptor<hwi::types::HWIExtendedPubKey> = client.get_descriptors(account)?;
+    let descriptors: HWIDescriptor<T> = client.get_descriptors(None)?;
+    let internal_descriptor = descriptors.internal.iter().map(|descriptor| {
+        format!("Descriptor: {:?}", descriptor)
+    }).collect::<Vec<String>>();
+    Ok(internal_descriptor)
+}
+
+
+
+  // pub fn create_new_wallet() -> Result<(), bdk::Error> {
+    //     // let client = Client::new("ssl://electrum.blockstream.info:60002")?;
+    //     let network =  bdk::bitcoin::Network::Regtest; // Or this can be Network::Bitcoin, Network::Signet or Network::Regtest
+
+    //     // Generate fresh mnemonic
+    //     let mnemonic: GeneratedKey<_, miniscript::Segwitv0> = Mnemonic::generate((WordCount::Words12, Language::English)).unwrap();
+    //     // Convert mnemonic to string
+    //     let mnemonic_words = mnemonic.to_string();
+
+    //     // Parse a mnemonic
+    //     let mnemonic  = Mnemonic::parse(&mnemonic_words).unwrap();
+    //     // Generate the extended key
+    //     let xkey: ExtendedKey = mnemonic.into_extended_key().unwrap();
+    //     // Get xprv from the extended key
+    //     let xprv = xkey.into_xprv(network).unwrap();
+    
+    //     // Create a BDK wallet structure using BIP 84 descriptor ("m/84h/1h/0h/0" and "m/84h/1h/0h/1")
+    //     let wallet = Wallet::new(
+    //         Bip84(xprv, KeychainKind::External),
+    //         Some(Bip84(xprv, KeychainKind::Internal)),
+    //         network,
+    //         MemoryDatabase::default(),
+    //     )
+    //     .unwrap();
+    
+    //     println!("mnemonic: {}\n\nrecv desc (pub key): {:#?}\n\nchng desc (pub key): {:#?}",
+    //         mnemonic_words,
+    //         wallet.get_descriptor_for_keychain(KeychainKind::External).to_string(),
+    //         wallet.get_descriptor_for_keychain(KeychainKind::Internal).to_string());
+    
+    
+    //     // print the recovery words:
+    //     println!("Recovery words: {}", mnemonic_words);
+    //     Ok(())
+        
+    // }

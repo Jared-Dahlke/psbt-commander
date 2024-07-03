@@ -207,6 +207,7 @@ export const Settings = () => {
 					)}
 				</CardFooter>
 			</Card>
+			{/* <Button onClick={() => get_hw_descriptors()}>get hw</Button> */}
 		</div>
 	)
 }

@@ -5,10 +5,12 @@ import { TooltipProvider } from './components/ui/tooltip'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { Dashboard } from './components/custom/Dashboard'
 import { App } from './App'
-import { Send } from './components/custom/Send'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from '@/components/ui/sonner'
 import { Settings } from './components/custom/Settings'
+import { CreatePsbt } from './components/custom/CreatePsbt'
+import { paths } from './constants'
+import { Broadcast } from './components/custom/Broadcast'
 // import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 const queryClient = new QueryClient()
@@ -19,15 +21,19 @@ const router = createMemoryRouter([
 		element: <App />,
 		children: [
 			{
-				path: '/',
+				path: paths.DASHBOARD,
 				element: <Dashboard />
 			},
 			{
-				path: '/send',
-				element: <Send />
+				path: paths.CREATE_PSBT,
+				element: <CreatePsbt />
 			},
 			{
-				path: '/settings',
+				path: paths.BROADCAST,
+				element: <Broadcast />
+			},
+			{
+				path: paths.SETTINGS,
 				element: <Settings />
 			}
 		]

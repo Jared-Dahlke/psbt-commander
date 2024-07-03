@@ -31,6 +31,7 @@ import {
 	requestPermission,
 	sendNotification
 } from '@tauri-apps/api/notification'
+import SatoshiIcon from '/satoshi.svg'
 
 import { AlertCircle, Download } from 'lucide-react'
 
@@ -40,6 +41,7 @@ import { writeTextFile, BaseDirectory } from '@tauri-apps/api/fs'
 import { toast } from 'sonner'
 import { CopyComponent } from './copy-component'
 import { FeeAlert } from './fee-alert'
+import numeral from 'numeral'
 
 async function downloadTextFile(content: string) {
 	const fileName = 'psbt.txt'
@@ -72,7 +74,7 @@ const formSchema = z.object({
 	fee: z.number().min(1)
 })
 
-export const Send = () => {
+export const CreatePsbt = () => {
 	const [psbt, setPsbt] = useState<string>('')
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
@@ -108,6 +110,7 @@ export const Send = () => {
 			const res = await invoke('create_psbt', input)
 			const parsedRes = z.string().parse(res)
 			setPsbt(parsedRes)
+			toast.success('PSBT created successfully!')
 		} catch (e) {
 			// if (e instanceof string) {
 			// 	console.error('invoke error message is instnace:', e)
@@ -122,6 +125,32 @@ export const Send = () => {
 
 	return (
 		<div className='space-y-8'>
+			{/* <div className='grid gap-4 sm:grid-cols-2'>
+				<Card x-chunk='dashboard-01-chunk-0'>
+					<CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+						<CardTitle className='text-sm font-medium'>Balance</CardTitle>
+						<img src={SatoshiIcon} />
+					</CardHeader>
+					<CardContent>
+						<div className='text-2xl font-bold'>
+							{numeral(info?.confirmed_balance).format('0,0')}
+						</div>
+						<p className='text-xs text-muted-foreground'>Satoshis</p>
+					</CardContent>
+				</Card>
+
+				<Card x-chunk='dashboard-01-chunk-0'>
+					<CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+						<CardTitle className='text-sm font-medium'>
+							Next unused Address
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<div className=' font-bold'>{info?.new_address}</div>
+					</CardContent>
+				</Card>
+			</div> */}
+
 			{/* {info && JSON.stringify(form)} */}
 			<Card className='sm:col-span-2' x-chunk='dashboard-05-chunk-0'>
 				<CardHeader className='pb-3'>
@@ -158,7 +187,7 @@ export const Send = () => {
 									</FormItem>
 								)}
 							/>
-							<div className='flex gap-8 w-full items-center'>
+							<div className='flex gap-8 w-full items-center relative'>
 								<FormField
 									control={form.control}
 									name='amount'
