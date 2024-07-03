@@ -106,6 +106,10 @@ export const Broadcast = () => {
 			</div> */}
 
 			{/* {info && JSON.stringify(form)} */}
+
+			<p className='text-orange-500 text-2xl'>
+				This feature is currently not implemented yet.
+			</p>
 			<Card className='sm:col-span-2' x-chunk='dashboard-05-chunk-0'>
 				<CardHeader className='pb-3'>
 					<CardTitle>Broadcast PSBT</CardTitle>
@@ -125,6 +129,7 @@ export const Broadcast = () => {
 										{/* <FormLabel>Fee</FormLabel> */}
 										<FormControl>
 											<Textarea
+												disabled
 												className='w-full'
 												placeholder='Enter PSBT here...'
 												{...field}
@@ -143,7 +148,9 @@ export const Broadcast = () => {
 							/>
 						</CardContent>
 						<CardFooter>
-							<Button type='submit'>Submit</Button>
+							<Button disabled type='submit'>
+								Submit
+							</Button>
 						</CardFooter>
 					</form>
 				</Form>

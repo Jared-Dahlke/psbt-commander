@@ -3,6 +3,7 @@
 
 mod app_wallet;
 use app_wallet::{AppWallet, CreatePsbtInput};
+use bdk_electrum::BdkElectrumClient;
 use crate::app_wallet::WalletInfo;
 
 
@@ -18,8 +19,10 @@ fn get_network(network_type: &str) -> bdk_wallet::bitcoin::Network {
 
 // #[tauri::command]
 // fn test_connection(url: &str) -> Result<String, String> {
-//     let client = Client::new(url).map_err(|e| e.to_string())?;
-//     let ping_result = client.ping();
+//     let client = BdkElectrumClient::new(electrum_client::Client::new(
+//         url,
+//     )?);
+//     let res = client.
 //     Ok(format!("{:?}", ping_result))
 // }
 

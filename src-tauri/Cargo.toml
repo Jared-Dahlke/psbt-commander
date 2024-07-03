@@ -19,6 +19,8 @@ bdk_wallet = { version = "1.0.0-alpha.13", default-feature = false, features = [
 bdk_electrum = "0.15.0"
 bdk_file_store = "0.13.0"
 anyhow = "1.0.86"
+better-panic = "0.3.0"
+xdg = "2.5.2"
 
 
 [features]

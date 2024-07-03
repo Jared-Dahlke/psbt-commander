@@ -125,27 +125,28 @@ impl AppWallet {
         url: &str,
         network: Network
     ) -> Result<WalletInfo, anyhow::Error> {
+        better_panic::Settings::debug()
+        .most_recent_first(false)
+        .lineno_suffix(true)
+        .install();
 
         let db_path = std::env::temp_dir().join("bdk-electrum-example");
         let mut db =
             Store::<bdk_wallet::wallet::ChangeSet>::open_or_create_new(DB_MAGIC.as_bytes(), db_path)?;
         let external_descriptor = descriptor;
         let internal_descriptor = change_descriptor;
-        let changeset = db
-            .aggregate_changesets()
-            .map_err(|e| anyhow!("load changes error: {}", e))?;
+        // let changeset = db
+        //     .aggregate_changesets()
+        //     .map_err(|e| anyhow!("load changes error: {}", e))?;
         let mut wallet = Wallet::new_or_load(
             external_descriptor,
             internal_descriptor,
-            changeset,
+            None,
             network,
         )?;
     
         let address = wallet.next_unused_address(KeychainKind::External);
-        if let Some(changeset) = wallet.take_staged() {
-            db.append_changeset(&changeset)?;
-        }
-        println!("Generated Address: {}", address);
+      
     
         let balance = wallet.balance();
         println!("Wallet balance before syncing: {} sats", balance.total());
