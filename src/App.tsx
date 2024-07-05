@@ -8,8 +8,6 @@ import {
 	PanelLeft,
 	Settings,
 	Users2,
-	Satellite,
-	SatelliteDish,
 	RadioTower
 } from 'lucide-react'
 
@@ -27,8 +25,8 @@ import {
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { cn } from './lib/utils'
 import { useWalletInfo } from './hooks/useWalletInfo'
-import { useEffect } from 'react'
 import { paths } from './constants'
+import { useEffect } from 'react'
 
 export function App() {
 	const pathname = useLocation().pathname
@@ -52,11 +50,11 @@ export function App() {
 		)
 	}
 
-	// useEffect(() => {
-	// 	if (doRedirect) {
-	// 		navigate(paths.SETTINGS)
-	// 	}
-	// }, [doRedirect])
+	useEffect(() => {
+		if (doRedirect) {
+			navigate(paths.SETTINGS)
+		}
+	}, [doRedirect])
 
 	return (
 		<div className='relative flex min-h-screen w-full flex-col justify-between bg-muted/40'>

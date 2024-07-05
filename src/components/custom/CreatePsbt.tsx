@@ -31,7 +31,6 @@ import {
 	requestPermission,
 	sendNotification
 } from '@tauri-apps/api/notification'
-import SatoshiIcon from '/satoshi.svg'
 
 import { AlertCircle, Download } from 'lucide-react'
 
@@ -41,7 +40,6 @@ import { writeTextFile, BaseDirectory } from '@tauri-apps/api/fs'
 import { toast } from 'sonner'
 import { CopyComponent } from './copy-component'
 import { FeeAlert } from './fee-alert'
-import numeral from 'numeral'
 
 async function downloadTextFile(content: string) {
 	const fileName = 'psbt.txt'
@@ -77,11 +75,7 @@ const formSchema = z.object({
 export const CreatePsbt = () => {
 	const [psbt, setPsbt] = useState<string>('')
 	const form = useForm<z.infer<typeof formSchema>>({
-		resolver: zodResolver(formSchema),
-		defaultValues: {
-			toAddress: 'bcrt1qr2pwrdg54mavec3fy6trmtuj45f6nncaxn0z7w',
-			amount: 123455
-		}
+		resolver: zodResolver(formSchema)
 	})
 
 	const { changeDescriptor, descriptor, clientUrl, network } = useLocalStorage()

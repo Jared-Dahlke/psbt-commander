@@ -1,8 +1,8 @@
 [package]
-name = "bitcoin-wallet"
+name = "psbt-commander"
 version = "0.0.0"
 description = "A Tauri App"
-authors = ["you"]
+authors = ["Jared Dahlke"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -13,14 +13,10 @@ tauri-build = { version = "1", features = [] }
 [dependencies]
 tauri = { version = "1", features = [ "notification-all", "fs-all", "shell-open"] }
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-base64 = "0.22.1"
 bdk_wallet = { version = "1.0.0-alpha.13", default-feature = false, features = ["all-keys"] }
 bdk_electrum = "0.15.0"
 bdk_file_store = "0.13.0"
 anyhow = "1.0.86"
-better-panic = "0.3.0"
-xdg = "2.5.2"
 
 
 [features]

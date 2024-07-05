@@ -9,9 +9,9 @@ use tauri::api::path::data_dir;
 use std::io::Write;
 
 
-use ::bdk_wallet::{bitcoin::{io::Error, FeeRate, Network, OutPoint, Script, Weight}, wallet::coin_selection::{decide_change, CoinSelectionAlgorithm, CoinSelectionResult}, Wallet, WeightedUtxo};
+use ::bdk_wallet::{bitcoin::{FeeRate, Network, OutPoint, Script, Weight}, wallet::coin_selection::{decide_change, CoinSelectionAlgorithm, CoinSelectionResult}, Wallet, WeightedUtxo};
 use serde::Serialize;
-use bdk_wallet::{bitcoin::{consensus::deserialize, hex::FromHex, Psbt}, wallet::coin_selection::Error::InsufficientFunds};
+use bdk_wallet::{bitcoin::{ hex::FromHex, Psbt, TxIn}, wallet::coin_selection::Error::InsufficientFunds};
 use bdk_electrum::electrum_client;
 use bdk_electrum::BdkElectrumClient;
 use bdk_file_store::Store;
@@ -53,66 +53,67 @@ pub struct CreatePsbtInput<'a> {
     pub network: Network
 }
 
-// #[derive(Debug)]
+#[derive(Debug)]
 
 
-// pub struct CustomCoinSelection {
-//     specific_utxos: Vec<OutPoint>,
-// }
+pub struct CustomCoinSelection {
+    specific_utxos: Vec<OutPoint>,
+}
 
-// impl CoinSelectionAlgorithm for CustomCoinSelection {
-//     fn coin_select(
-//         &self,       
-//         required_utxos: Vec<WeightedUtxo>,
-//         optional_utxos: Vec<WeightedUtxo>,
-//         fee_rate: FeeRate,
-//         target_amount: u64,
-//         drain_script: &Script,
-//     ) -> Result<CoinSelectionResult, bdk_wallet::wallet::coin_selection::Error> {
-//         println!("fee_rate: {:#?}", fee_rate);
-//         let mut selected_amount = 0;
-//         let mut additional_weight = Weight::ZERO;
+impl CoinSelectionAlgorithm for CustomCoinSelection {
+    fn coin_select(
+        &self,       
+        required_utxos: Vec<WeightedUtxo>,
+        optional_utxos: Vec<WeightedUtxo>,
+        fee_rate: FeeRate,
+        target_amount: u64,
+        drain_script: &Script,
+    ) -> Result<CoinSelectionResult, bdk_wallet::wallet::coin_selection::Error> {
+        println!("fee_rate: {:#?}", fee_rate);
+        let mut selected_amount = 0;
+        let mut additional_weight = Weight::ZERO;
 
-//         // Filter UTXOs based on specified OutPoints
-//         let selected_utxos = required_utxos
-//             .into_iter()
-//             .chain(optional_utxos)
-//             .filter(|weighted_utxo| self.specific_utxos.contains(&weighted_utxo.utxo.outpoint()))
-//             .scan(
-//                 (&mut selected_amount, &mut additional_weight),
-//                 |(selected_amount, additional_weight), weighted_utxo| {
-//                     **selected_amount += weighted_utxo.utxo.txout().value;
-//                     **additional_weight += Weight::from_wu(
-//                         (TXIN_BASE_WEIGHT + weighted_utxo.satisfaction_weight) as u64,
-//                     );
-//                     Some(weighted_utxo.utxo)
-//                 },
-//             )
-//             .collect::<Vec<_>>();
+        // Filter UTXOs based on specified OutPoints
+        let selected_utxos = required_utxos
+             .into_iter()
+             .chain(optional_utxos)
+             .filter(|weighted_utxo| self.specific_utxos.contains(&weighted_utxo.utxo.outpoint()))
+             .scan(
+                 (&mut selected_amount, &mut additional_weight),
+                 |(selected_amount, additional_weight), weighted_utxo| {
+                     **selected_amount += weighted_utxo.utxo.txout().value.to_sat();
+                     **additional_weight += TxIn::default()
+                         .segwit_weight()
+                         .checked_add(bdk_wallet::bitcoin::Weight::from_wu_usize(weighted_utxo.satisfaction_weight))
+                         .expect("`Weight` addition should not cause an integer overflow");
+                     Some(weighted_utxo.utxo)
+                 },
+             )
+             .collect::<Vec<_>>();
 
-//         let additional_fees = fee_rate.fee_wu(additional_weight);
-        
-
-//         let amount_needed_with_fees = additional_fees + target_amount;
-
-//         if selected_amount < amount_needed_with_fees {
-//             return Err(InsufficientFunds{
-//                 needed: amount_needed_with_fees,
-//                 available: selected_amount,
-//             });
-//         }
-
-//         let remaining_amount = selected_amount - amount_needed_with_fees;
-//         let excess = decide_change(remaining_amount, fee_rate, drain_script);
+             let additional_fees = (fee_rate * additional_weight).to_sat();
 
 
-//         Ok(CoinSelectionResult {
-//             selected: selected_utxos,
-//             fee_amount: additional_fees,
-//             excess,
-//         })
-//     }
-// }
+        let amount_needed_with_fees = additional_fees + target_amount;
+
+        if selected_amount < amount_needed_with_fees {
+            return Err(InsufficientFunds{
+                needed: amount_needed_with_fees,
+                available: selected_amount,
+            });
+        }
+
+        let remaining_amount = selected_amount - amount_needed_with_fees;
+        let excess = decide_change(remaining_amount, fee_rate, drain_script);
+
+
+        Ok(CoinSelectionResult {
+            selected: selected_utxos,
+            fee_amount: additional_fees,
+            excess,
+        })
+    }
+}
 
 
 
@@ -409,22 +410,22 @@ impl AppWallet {
    
 
 
-    //     let official_utxos = wallet.list_unspent();
+        let official_utxos = wallet.list_unspent();
 
-    //     let official_utxo_included_in_specific_utxos = official_utxos
-    // .filter(|utxo| utxo_txids.contains(&utxo.outpoint.txid.to_string().as_str()))
-    // .collect::<Vec<_>>();
+        let official_utxo_included_in_specific_utxos = official_utxos
+    .filter(|utxo| utxo_txids.contains(&utxo.outpoint.txid.to_string().as_str()))
+    .collect::<Vec<_>>();
 
   
        
-        // let official_converted_to_vec = official_utxo_included_in_specific_utxos
-        // .iter()
-        // .map(|utxo| utxo.outpoint)
-        // .collect::<Vec<_>>();
+        let official_converted_to_vec = official_utxo_included_in_specific_utxos
+        .iter()
+        .map(|utxo| utxo.outpoint)
+        .collect::<Vec<_>>();
 
-      //  let coin_selection = CustomCoinSelection { specific_utxos: official_converted_to_vec };
+        let coin_selection = CustomCoinSelection { specific_utxos: official_converted_to_vec };
 
-        let mut tx_builder = wallet.build_tx(); //.coin_selection(coin_selection);
+        let mut tx_builder = wallet.build_tx().coin_selection(coin_selection);
 
         let fee_rate = FeeRate::from_sat_per_vb(fee).unwrap();
 
