@@ -133,11 +133,7 @@ impl AppWallet {
         url: &str,
         network: Network
     ) -> Result<WalletInfo, anyhow::Error> {
-        better_panic::Settings::debug()
-        .most_recent_first(false)
-        .lineno_suffix(true)
-        .install();
-
+       
       
     let app_data_path: PathBuf = data_dir().ok_or_else(|| anyhow::anyhow!("Failed to get app data directory"))?
     .join("bdk-electrum");
