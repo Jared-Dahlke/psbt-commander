@@ -1,6 +1,6 @@
 # PSBT Commander
 
-A Rust BDK powered PSBT creator. (BDK 1.0.0-alpha.13)
+A Rust BDK powered PSBT creator. (BDK 1.0.0-alpha.13).
 
 Go to [`releases`](https://github.com/Jared-Dahlke/psbt-commander/releases) to download and use the app.
 
