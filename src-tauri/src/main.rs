@@ -3,7 +3,6 @@
 
 mod app_wallet;
 use app_wallet::{AppWallet, CreatePsbtInput};
-use bdk_electrum::BdkElectrumClient;
 use crate::app_wallet::WalletInfo;
 
 
@@ -30,6 +29,7 @@ fn get_network(network_type: &str) -> bdk_wallet::bitcoin::Network {
 fn get_info_by_descriptor(descriptor: &str, changedescriptor: &str, url: &str, networktype: &str) -> Result<WalletInfo, String> {
     
     let network = get_network(networktype);
+    println!("Network: {:?}", network);
     match AppWallet::get_info_by_descriptor(descriptor, changedescriptor, url, network) {
         Ok(wallet_info) => {
             println!("Wallet get_info_by_descriptor success");
@@ -42,32 +42,32 @@ fn get_info_by_descriptor(descriptor: &str, changedescriptor: &str, url: &str, n
     }
 }
 
-// #[tauri::command]
-// fn create_psbt(descriptor: &str, change_descriptor: Option<&str>, amount: u64, recipient: &str, utxo_txids: Vec<&str>, fee: f32, url: &str, networktype: &str) -> Result<String, String> {
+#[tauri::command]
+fn create_psbt(descriptor: &str, change_descriptor: &str, amount: u64, recipient: &str, utxo_txids: Vec<&str>, fee: u64, url: &str, networktype: &str) -> Result<String, String> {
 
-//     let network = get_network(networktype);
+    let network = get_network(networktype);
     
-//     let input = CreatePsbtInput {
-//         descriptor,
-//         change_descriptor,
-//         amount,  // Amount in satoshis
-//         recipient,
-//         utxo_txids,
-//         fee,
-//         url,
-//         network
-//     };
-//     match create_psbt(input) {
-//         Ok(psbt) => {
-//             println!("Wallet create_psbt success");
-//             Ok(psbt)
-//         },
-//         Err(e) => {
-//             eprintln!("Error create_psbt: {}", e);
-//             Err(e.to_string())
-//         },
-//     }
-// }
+    let input = CreatePsbtInput {
+        descriptor,
+        change_descriptor,
+        amount,  // Amount in satoshis
+        recipient,
+        utxo_txids,
+        fee,
+        url,
+        network
+    };
+    match AppWallet::create_psbt(input) {
+        Ok(psbt) => {
+            println!("Wallet create_psbt success");
+            Ok(psbt)
+        },
+        Err(e) => {
+            eprintln!("Error create_psbt: {}", e);
+            Err(e.to_string())
+        },
+    }
+}
 
 // #[tauri::command]
 // fn create_new_wallet() {
@@ -82,7 +82,7 @@ fn get_info_by_descriptor(descriptor: &str, changedescriptor: &str, url: &str, n
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![get_info_by_descriptor])
+        .invoke_handler(tauri::generate_handler![get_info_by_descriptor, create_psbt])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
