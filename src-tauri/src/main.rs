@@ -6,6 +6,7 @@ use app_wallet::{AppWallet, CreatePsbtInput};
 use crate::app_wallet::WalletInfo;
 
 
+
 fn get_network(network_type: &str) -> bdk_wallet::bitcoin::Network {
     match network_type {
         "bitcoin" => bdk_wallet::bitcoin::Network::Bitcoin,
@@ -16,14 +17,10 @@ fn get_network(network_type: &str) -> bdk_wallet::bitcoin::Network {
     }
 }
 
-// #[tauri::command]
-// fn test_connection(url: &str) -> Result<String, String> {
-//     let client = BdkElectrumClient::new(electrum_client::Client::new(
-//         url,
-//     )?);
-//     let res = client.
-//     Ok(format!("{:?}", ping_result))
-// }
+#[tauri::command]
+fn test_connection(url: String) -> bool {
+    AppWallet::is_valid_electrum_url(&url)
+}
 
 #[tauri::command]
 fn get_info_by_descriptor(descriptor: &str, changedescriptor: &str, url: &str, networktype: &str) -> Result<WalletInfo, String> {
@@ -89,20 +86,10 @@ fn broadcast_psbt(descriptor: &str, changedescriptor: &str, url: &str, networkty
     }
 }
 
-// #[tauri::command]
-// fn create_new_wallet() {
-    
-//     match app_wallet::BdkWallet::create_new_wallet() {
-//         Ok(_) => println!("Wallet desc successfully"),
-//         Err(e) => eprintln!("Error desc wallet: {}", e),
-//     }
-
-// }
-
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![get_info_by_descriptor, create_psbt, broadcast_psbt])
+        .invoke_handler(tauri::generate_handler![get_info_by_descriptor, create_psbt, broadcast_psbt,test_connection])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -124,7 +124,9 @@ pub struct AppWallet {
 impl AppWallet {
     
 
-
+    pub fn is_valid_electrum_url(url: &str) -> bool {
+        electrum_client::Client::new(url).is_ok()
+    }
 
 
     pub fn get_info_by_descriptor(

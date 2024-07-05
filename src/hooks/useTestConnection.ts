@@ -17,11 +17,7 @@ export const useTestConnection = ({ url }: IProps) => {
 		//enabled: !!ur && !!changeDescriptor
 	})
 
-	const status =
-		testConnectionQuery.data &&
-		testConnectionQuery.data?.toString().includes('Ok')
-			? 'Connected'
-			: 'Not Connected'
+	const status = !!testConnectionQuery.data ? 'Connected' : 'Not Connected'
 
 	return {
 		status
