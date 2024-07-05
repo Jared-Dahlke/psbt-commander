@@ -70,8 +70,9 @@ export const Broadcast = () => {
 		const res = await invoke('broadcast_psbt', {
 			psbt: values.psbt,
 			descriptor,
-			clientUrl,
-			network
+			changedescriptor: changeDescriptor,
+			url: clientUrl,
+			networktype: network
 		})
 
 		console.log(res)
@@ -107,9 +108,9 @@ export const Broadcast = () => {
 
 			{/* {info && JSON.stringify(form)} */}
 
-			<p className='text-orange-500 text-2xl'>
+			{/* <p className='text-orange-500 text-2xl'>
 				This feature is currently not implemented yet.
-			</p>
+			</p> */}
 			<Card className='sm:col-span-2' x-chunk='dashboard-05-chunk-0'>
 				<CardHeader className='pb-3'>
 					<CardTitle>Broadcast PSBT</CardTitle>
@@ -129,7 +130,6 @@ export const Broadcast = () => {
 										{/* <FormLabel>Fee</FormLabel> */}
 										<FormControl>
 											<Textarea
-												disabled
 												className='w-full'
 												placeholder='Enter PSBT here...'
 												{...field}
@@ -148,9 +148,7 @@ export const Broadcast = () => {
 							/>
 						</CardContent>
 						<CardFooter>
-							<Button disabled type='submit'>
-								Submit
-							</Button>
+							<Button type='submit'>Submit</Button>
 						</CardFooter>
 					</form>
 				</Form>

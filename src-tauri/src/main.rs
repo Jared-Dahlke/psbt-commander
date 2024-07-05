@@ -69,6 +69,26 @@ fn create_psbt(descriptor: &str, change_descriptor: &str, amount: u64, recipient
     }
 }
 
+#[tauri::command]
+fn broadcast_psbt(descriptor: &str, changedescriptor: &str, url: &str, networktype: &str, psbt: &str) -> Result<String, String> {
+    let network = get_network(networktype);
+    println!("t Network: {:?}", network);
+    println!("t Descriptor: {:?}", descriptor);
+    println!("t Change Descriptor: {:?}", changedescriptor);
+    println!("t Url: {:?}", url);
+    println!("t Psbt: {:?}", psbt);
+    match AppWallet::broadcast_psbt(descriptor, changedescriptor, url, network, psbt) {
+        Ok(txid) => {
+            println!("Wallet broadcast_psbt success");
+            Ok(txid)
+        },
+        Err(e) => {
+            eprintln!("Error broadcast_psbt: {}", e);
+            Err(e.to_string())
+        },
+    }
+}
+
 // #[tauri::command]
 // fn create_new_wallet() {
     
@@ -82,7 +102,7 @@ fn create_psbt(descriptor: &str, change_descriptor: &str, amount: u64, recipient
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![get_info_by_descriptor, create_psbt])
+        .invoke_handler(tauri::generate_handler![get_info_by_descriptor, create_psbt, broadcast_psbt])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

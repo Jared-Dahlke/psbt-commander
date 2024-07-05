@@ -11,14 +11,15 @@ use std::io::Write;
 
 use ::bdk_wallet::{bitcoin::{io::Error, FeeRate, Network, OutPoint, Script, Weight}, wallet::coin_selection::{decide_change, CoinSelectionAlgorithm, CoinSelectionResult}, Wallet, WeightedUtxo};
 use serde::Serialize;
-use bdk_wallet::wallet::coin_selection::Error::InsufficientFunds;
+use bdk_wallet::{bitcoin::{consensus::deserialize, hex::FromHex, Psbt}, wallet::coin_selection::Error::InsufficientFunds};
 use bdk_electrum::electrum_client;
 use bdk_electrum::BdkElectrumClient;
 use bdk_file_store::Store;
 use bdk_wallet::bitcoin::{Address, Amount};
 use bdk_wallet::chain::collections::HashSet;
 use bdk_wallet::{KeychainKind, SignOptions};
-
+use bdk_wallet::bitcoin::base64::Engine;
+use bdk_wallet::bitcoin::base64::prelude::BASE64_STANDARD;
 
 
 const TXIN_BASE_WEIGHT: usize = 164; // Base weight units for a SegWit input
@@ -122,6 +123,9 @@ pub struct AppWallet {
 impl AppWallet {
     
 
+
+
+
     pub fn get_info_by_descriptor(
         descriptor: &str,
         change_descriptor: &str,
@@ -199,7 +203,7 @@ impl AppWallet {
         }
     
         let balance = wallet.balance();
-        println!("Wallet balance after syncing: {} sats", balance.total());
+        println!("Wallet balance after syncing: {} sats", balance);
     
         if balance.total() < SEND_AMOUNT {
             println!(
@@ -223,45 +227,108 @@ impl AppWallet {
 
 
    
-    // pub fn broadcast_psbt(
-    //     descriptor: &str,
-    //     change_descriptor: Option<&str>,
-    //     url: &str,
-    //     network: bdk::bitcoin::Network,
-    //     psbt: String,
-    // ) -> Result<String, bdk::Error> {
+    pub fn broadcast_psbt(
+        descriptor: &str,
+        change_descriptor: &str,
+        url: &str,
+        network: Network,
+        psbt: &str,
+    ) -> Result<String, anyhow::Error> {
         
-       
-    //     let client = Client::new(url)?;
-    //     let blockchain = ElectrumBlockchain::from(client);
-    //     let wallet: Wallet<MemoryDatabase> = Wallet::new(
-    //         descriptor,
-    //         change_descriptor,
-    //         network,         
-    //         MemoryDatabase::default(),
-    //     )?;
+        println!("Broadcasting PSBT");
+
+        // log all inputs
+        println!("descriptor: {:#?}", descriptor);
+        println!("change_descriptor: {:#?}", change_descriptor);
+        println!("url: {:#?}", url);
+        println!("psbt: {:#?}", psbt);
+        println!("network: {:#?}", network);
+
+        
+        let app_data_path: PathBuf = data_dir().ok_or_else(|| anyhow::anyhow!("Failed to get app data directory"))?
+    .join("bdk-electrum");
+
+        let mut db =
+            Store::<bdk_wallet::wallet::ChangeSet>::open_or_create_new(DB_MAGIC.as_bytes(), app_data_path)?;
+       let external_descriptor = descriptor;
+       let internal_descriptor = change_descriptor;
+        let changeset = db
+            .aggregate_changesets()
+            .map_err(|e| anyhow!("load changes error: {}", e))?;
+        let mut wallet = Wallet::new_or_load(
+            external_descriptor,
+            internal_descriptor,
+            changeset,
+            network,
+        )?;
+        
+        if let Some(changeset) = wallet.take_staged() {
+            db.append_changeset(&changeset)?;
+        }
     
-    //     wallet.sync(&blockchain, SyncOptions::default())?;
+        print!("Syncing...");
+        let client = BdkElectrumClient::new(electrum_client::Client::new(
+            url,
+        )?);
+    
+        // Populate the electrum client's transaction cache so it doesn't redownload transaction we
+        // already have.
+       client.populate_tx_cache(&wallet);
+    
+        let request = wallet
+            .start_full_scan()
+            .inspect_spks_for_all_keychains({
+                let mut once = HashSet::<KeychainKind>::new();
+                move |k, spk_i, _| {
+                    if once.insert(k) {
+                        print!("\nScanning keychain [{:?}]", k)
+                    } else {
+                        print!(" {:<3}", spk_i)
+                    }
+                }
+            })
+            .inspect_spks_for_all_keychains(|_, _, _| std::io::stdout().flush().expect("must flush"));
+    
+        let mut update = client
+            .full_scan(request, STOP_GAP, BATCH_SIZE, false)?
+            .with_confirmation_time_height_anchor(&client)?;
+    
+        let now = std::time::UNIX_EPOCH.elapsed().unwrap().as_secs();
+        let _ = update.graph_update.update_last_seen_unconfirmed(now);
+    
+       println!();
+    
+        wallet.apply_update(update)?;
+        if let Some(changeset) = wallet.take_staged() {
+            db.append_changeset(&changeset)?;
+        }
+
+        println!("raw psbt: {:#?}", psbt.to_string());
+
+        let psbt = Vec::from_hex(&psbt)?;
+    
        
-    //    let psbt = base64::decode(&psbt).map_err(|e| bdk::Error::Generic(e.to_string()))?;
-    //    let psbt: PartiallySignedTransaction = bdk_wallet::deserialize(&psbt)?;
+      // let psbt = BASE64_STANDARD.decode(&psbt).unwrap();
+       let mut psbt = Psbt::deserialize(&psbt).unwrap();
 
-    //     let sign_options = SignOptions::default();
-  
-    //     // Under the hood this uses `rust-bitcoin`'s psbt utilities to finalize the scriptSig and scriptWitness
-    //     let _psbt_is_finalized = wallet.finalize_psbt(&mut psbt, sign_options)?;
-  
-    //     // Get the transaction out of the PSBT so we can broadcast it
-    //     let tx = psbt.extract_tx();
-  
-    //     // Broadcast the transaction using our chosen backend, returning a `Txid` or an error
-    //     let txid = wallet.broadcast(tx)?;
-  
-    //     println!("{:#?}", txid);
-  
-    //     Ok(txid.to_string())
+       let _psbt_is_final = bdk_wallet::wallet::Wallet::finalize_psbt(&mut wallet, &mut psbt, SignOptions::default())?;
 
-    // }
+       println!("final PSBT: {:#?}", psbt);
+
+  
+       let tx = psbt.extract_tx()?;
+
+
+
+       println!("Tx extracted from PSBT: {:#?}", tx);
+  
+       client.transaction_broadcast(&tx)?;
+  
+       println!("Tx broadcasted! Txid: {}", tx.compute_txid());
+  
+        Ok(tx.compute_txid().to_string())
+
+    }
 
 
     pub fn create_psbt(
@@ -364,7 +431,7 @@ impl AppWallet {
         tx_builder.fee_rate(fee_rate);
         
         //  // The Coldcard requires an output redeem witness script
-        tx_builder.include_output_redeem_witness_script();
+       // tx_builder.include_output_redeem_witness_script();
 
         // // Enable signaling replace-by-fee
         tx_builder.enable_rbf();
