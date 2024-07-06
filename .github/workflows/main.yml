@@ -21,9 +21,7 @@ jobs:
           - platform: "macos-latest" # for Intel based macs.
             args: "--target x86_64-apple-darwin"
           - platform: "ubuntu-22.04" # for Tauri v1 you could replace this with ubuntu-20.04.
-            args: ""
-          - platform: "windows-latest"
-            args: ""
+            args: ""          
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -48,20 +46,6 @@ jobs:
         # webkitgtk 4.0 is for Tauri v1 - webkitgtk 4.1 is for Tauri v2.
         # You can remove the one that doesn't apply to your app to speed up the workflow a bit.
 
-      - name: install nasm (windows only)
-        if: matrix.platform == 'windows-latest'
-        run: choco install nasm
-
-      - name: add nasm to PATH (windows only)
-        if: matrix.platform == 'windows-latest'
-        run: echo "C:\Program Files\NASM" >> $GITHUB_PATH
-
-      - name: verify nasm installation
-        if: matrix.platform == 'windows-latest'
-        run: |
-          echo $env:PATH
-          which nasm
-          nasm --version
 
       - name: install frontend dependencies
         run: yarn install # change this to npm, pnpm or bun depending on which one you use.
