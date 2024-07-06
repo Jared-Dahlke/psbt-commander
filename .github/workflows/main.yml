@@ -56,6 +56,12 @@ jobs:
         if: matrix.platform == 'windows-latest'
         run: echo "C:\Program Files\NASM" >> $GITHUB_PATH
 
+      - name: verify nasm installation
+        if: matrix.platform == 'windows-latest'
+        run: |
+          which nasm
+          nasm --version
+
       - name: install frontend dependencies
         run: yarn install # change this to npm, pnpm or bun depending on which one you use.
 
