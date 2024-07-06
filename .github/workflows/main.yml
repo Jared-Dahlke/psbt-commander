@@ -52,6 +52,11 @@ jobs:
         if: matrix.platform == 'windows-latest'
         run: choco install nasm
 
+      - name: add nasm to PATH (windows only)
+        if: matrix.platform == 'windows-latest'
+        run: |
+          echo "::add-path::C:\Program Files\NASM"
+
       - name: install frontend dependencies
         run: yarn install # change this to npm, pnpm or bun depending on which one you use.
 
