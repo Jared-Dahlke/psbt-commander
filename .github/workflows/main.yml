@@ -54,8 +54,7 @@ jobs:
 
       - name: add nasm to PATH (windows only)
         if: matrix.platform == 'windows-latest'
-        run: |
-          echo "::add-path::C:\Program Files\NASM"
+        run: echo "C:\Program Files\NASM" >> $GITHUB_PATH
 
       - name: install frontend dependencies
         run: yarn install # change this to npm, pnpm or bun depending on which one you use.
