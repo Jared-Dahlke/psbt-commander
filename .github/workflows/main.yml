@@ -59,6 +59,7 @@ jobs:
       - name: verify nasm installation
         if: matrix.platform == 'windows-latest'
         run: |
+          echo $env:PATH
           which nasm
           nasm --version
 
